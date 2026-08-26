@@ -1,0 +1,79 @@
+/* ============================================================
+ * components.css - 可复用组件：表单 / 上传区 / 状态提示 / 表格 / Toast
+ * ============================================================ */
+
+/* ============ 表单 ============ */
+.field { margin-bottom: 18px; }
+.field > label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.input {
+  width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px;
+  font-size: 14.5px; font-family: inherit; background: #fbfcfe;
+  transition: border .2s, box-shadow .2s; color: var(--text);
+}
+.input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(36, 86, 224, 0.12); }
+textarea.input { resize: vertical; line-height: 1.6; }
+.mono { font-family: var(--font-mono); font-size: 13.5px; }
+.time-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* ============ 上传区 ============ */
+.dropzone {
+  border: 2px dashed #c4cfe4; border-radius: 14px;
+  padding: 42px 20px; text-align: center; cursor: pointer;
+  color: var(--text-light); background: #fbfcfe;
+  transition: all .2s; margin-bottom: 12px;
+}
+.dropzone:hover, .dropzone.drag { border-color: var(--primary); background: var(--primary-light); color: var(--primary-dark); }
+.dropzone .dz-icon { display: inline-flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; color: var(--primary); }
+.dropzone .dz-main { font-size: 15px; font-weight: 600; color: var(--text); }
+.dropzone .dz-sub { font-size: 12.5px; display: block; margin-top: 4px; }
+.fileinfo { font-size: 13.5px; color: var(--text-light); margin-bottom: 16px; }
+.fileinfo b { color: var(--text); }
+
+/* ============ 状态提示 ============ */
+.status { margin-top: 16px; font-size: 13.5px; min-height: 20px; }
+.status.ok { color: var(--success); }
+.status.err { color: var(--danger); }
+.status.processing { color: var(--primary-dark); }
+.spinner {
+  display: inline-block; width: 14px; height: 14px;
+  border: 2px solid rgba(36,86,224,.25); border-top-color: var(--primary);
+  border-radius: 50%; animation: spin .7s linear infinite;
+  vertical-align: -2px; margin-right: 4px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.banner {
+  padding: 12px 16px; border-radius: 10px; font-size: 13.5px; margin-bottom: 18px;
+}
+.banner .icon { vertical-align: -2px; margin-right: 5px; }
+.banner.warn { background: #fff7e6; color: #92600a; border: 1px solid #ffe1a8; }
+.banner.info { background: var(--primary-light); color: var(--primary-dark); border: 1px solid #c9d9ff; }
+
+/* ============ 资源表格（学习板块） ============ */
+.resource-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.resource-table th, .resource-table td { text-align: left; padding: 13px 14px; border-bottom: 1px solid var(--border); }
+.resource-table th { background: #f4f7fd; font-size: 13px; color: var(--text-light); font-weight: 600; }
+.resource-table tr:hover td { background: #fafbfe; }
+.resource-table .r-title { font-weight: 600; color: var(--text); }
+.resource-table .r-summary { color: var(--text-light); font-size: 13px; max-width: 420px; }
+.tag { display: inline-block; padding: 1px 9px; border-radius: 6px; font-size: 12px; }
+.tag-文档 { background: var(--primary-light); color: var(--primary-dark); }
+.tag-模板 { background: #dcfce9; color: #14713d; }
+.tag-课件 { background: #fdeedd; color: #a05a09; }
+
+.loadbox { text-align: center; padding: 50px 0; color: var(--text-light); }
+
+/* ============ Toast ============ */
+.toast {
+  position: fixed; left: 50%; bottom: 40px; transform: translate(-50%, 20px);
+  background: rgba(17, 24, 39, 0.92); color: #fff; font-size: 14px;
+  padding: 11px 22px; border-radius: 999px; opacity: 0;
+  transition: all .3s; z-index: 999; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ============ 响应式 ============ */
+@media (max-width: 640px) {
+  .time-row { grid-template-columns: 1fr; }
+  .resource-table .r-summary { display: none; }
+}

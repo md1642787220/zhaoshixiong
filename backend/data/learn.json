@@ -1,0 +1,69 @@
+{
+  "categories": [
+    {
+      "id": "office",
+      "name": "Office/WPS 专区",
+      "icon": "bar-chart",
+      "description": "Word、Excel、PPT 与 WPS 的实用技巧、函数速查与排版规范，让办公软件真正为你所用。",
+      "resources": [
+        { "id": "o1", "title": "Excel 常用函数速查手册", "type": "文档", "format": "PDF", "size": "2.4 MB", "summary": "涵盖 VLOOKUP、XLOOKUP、SUMIF、INDEX+MATCH 等高频函数的语法、场景与实例。" },
+        { "id": "o2", "title": "Word 公文式排版规范与样式模板", "type": "模板", "format": "DOCX", "size": "1.1 MB", "summary": "字体字号、页边距、标题层级一键套用，输出符合公文排版习惯的文档。" },
+        { "id": "o3", "title": "WPS 与 Office 兼容性避坑指南", "type": "文档", "format": "PDF", "size": "1.8 MB", "summary": "常见格式错乱、公式失效、字体丢失等问题的预防与修复方法。" },
+        { "id": "o4", "title": "PPT 汇报课件美化技巧", "type": "课件", "format": "PPTX", "size": "5.2 MB", "summary": "统一字体、母版设计、图表美化与汇报逻辑的实用操作合集。" },
+        { "id": "o5", "title": "Excel 数据透视表从入门到精通", "type": "文档", "format": "PDF", "size": "3.6 MB", "summary": "三步完成数据汇总与交叉分析，告别手工统计报表。" }
+      ]
+    },
+    {
+      "id": "courseware",
+      "name": "课件模板",
+      "icon": "layout",
+      "description": "中小学课件、班会、说课与公开课模板，拿来即用，稍作修改即可上场。",
+      "resources": [
+        { "id": "c1", "title": "中小学通用课件模板（简约风）", "type": "模板", "format": "PPTX", "size": "6.8 MB", "summary": "16:9 版式，含封面、目录、过渡页与内容页，配色清爽不花哨。" },
+        { "id": "c2", "title": "主题班会课件模板合集", "type": "模板", "format": "PPTX", "size": "12.5 MB", "summary": "安全教育、心理健康、开学第一课等 12 个常用主题。" },
+        { "id": "c3", "title": "说课比赛课件模板", "type": "模板", "format": "PPTX", "size": "4.9 MB", "summary": "按说课流程搭建框架：教材分析、学情分析、教法学法、教学过程、板书设计。" },
+        { "id": "c4", "title": "公开课互动课件模板", "type": "课件", "format": "PPTX", "size": "8.3 MB", "summary": "内置课堂活动页、提问环节与小组讨论版式，活跃课堂气氛。" },
+        { "id": "c5", "title": "微课录制课件模板", "type": "模板", "format": "PPTX", "size": "3.2 MB", "summary": "适配主流录屏软件的版式与配色建议，录制效果更清晰。" }
+      ]
+    },
+    {
+      "id": "education",
+      "name": "教育文件板块",
+      "icon": "book-open",
+      "description": "课程标准、政策文件、评审材料等教育系统常用文件汇编与解读。",
+      "resources": [
+        { "id": "e1", "title": "义务教育课程方案与课程标准（2022 年版）要点解读", "type": "文档", "format": "PDF", "size": "4.5 MB", "summary": "逐科梳理新课标变化点与教学落地建议。" },
+        { "id": "e2", "title": "中小学教师职称评审材料清单与模板", "type": "文档", "format": "DOCX", "size": "0.9 MB", "summary": "申报表、业绩佐证、论文要求一表看清，附材料整理顺序。" },
+        { "id": "e3", "title": "学校安全管理文件汇编目录", "type": "文档", "format": "PDF", "size": "1.6 MB", "summary": "校舍、消防、饮食、活动安全等制度文件目录与责任清单。" },
+        { "id": "e4", "title": "教育系统公文行文规范速查", "type": "文档", "format": "PDF", "size": "1.2 MB", "summary": "行文规则、文种选用、格式要素的快速查阅卡片。" },
+        { "id": "e5", "title": "学生综合素质评价操作指引", "type": "文档", "format": "PDF", "size": "2.1 MB", "summary": "评价指标、记录方式与期末汇总填报流程说明。" }
+      ]
+    },
+    {
+      "id": "writing",
+      "name": "公文写作板块",
+      "icon": "pen-tool",
+      "description": "法定公文与事务文书的格式规范、写作要点与常用表述，写材料不再抓瞎。",
+      "resources": [
+        { "id": "w1", "title": "党政机关公文格式（GB/T 9704）图解速查", "type": "文档", "format": "PDF", "size": "3.8 MB", "summary": "版头、主体、版记各要素一图看懂，字号字体精确到磅值。" },
+        { "id": "w2", "title": "15 种法定公文写作要点（通知/请示/报告…）", "type": "文档", "format": "PDF", "size": "2.9 MB", "summary": "每种文种的适用范围、结构套路与易错点提醒。" },
+        { "id": "w3", "title": "常用事务文书写作模板（总结/计划/简报）", "type": "模板", "format": "DOCX", "size": "1.4 MB", "summary": "工作总结、年度计划、工作简报等高频文书的成稿模板。" },
+        { "id": "w4", "title": "公文常用词语与规范表述手册", "type": "文档", "format": "PDF", "size": "1.7 MB", "summary": "开头用语、承转用语、结尾用语与常见不规范表述对照。" },
+        { "id": "w5", "title": "领导讲话稿写作框架与范例", "type": "文档", "format": "DOCX", "size": "2.2 MB", "summary": "会议讲话、动员部署、总结表彰三类场景的框架与金句素材。" }
+      ]
+    },
+    {
+      "id": "improve",
+      "name": "提升专区",
+      "icon": "rocket",
+      "description": "计算机等级考试、教资考试、雅思托福等升学晋升备考资料，职业发展与自我提升并进。",
+      "resources": [
+        { "id": "i1", "title": "计算机等级考试（NCRE）二级 MS Office 高频考点速记", "type": "文档", "format": "PDF", "size": "3.1 MB", "summary": "Word / Excel / PPT 操作题高频考点与选择题题库精简版。" },
+        { "id": "i2", "title": "教师资格证笔试科目一 + 科目二备考全攻略", "type": "文档", "format": "PDF", "size": "4.2 MB", "summary": "综合素质与教育知识能力的考点框架、记忆口诀与答题模板。" },
+        { "id": "i3", "title": "教资面试结构化问答 + 试讲逐字稿范例", "type": "文档", "format": "DOCX", "size": "2.0 MB", "summary": "结构化八大类题型应答思路与 20 篇试讲逐字稿范例。" },
+        { "id": "i4", "title": "雅思/托福核心词汇与听说读写备考规划", "type": "文档", "format": "PDF", "size": "5.5 MB", "summary": "三个月备考时间表、分项提分策略与机考注意事项。" },
+        { "id": "i5", "title": "普通话水平测试应试技巧（教资认定必备）", "type": "文档", "format": "PDF", "size": "1.3 MB", "summary": "朗读短文、命题说话评分标准与考前冲刺训练法。" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "helper-backend",
+  "version": "1.0.0",
+  "description": "Helper 助手后端服务 - 为教师、公务员及体制内员工打造的实用工具箱",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "marked": "^12.0.2",
+    "multer": "^2.2.0",
+    "pdf-parse": "^1.1.1"
+  }
+}

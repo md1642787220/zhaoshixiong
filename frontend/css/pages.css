@@ -1,0 +1,46 @@
+/* ============================================================
+ * pages.css - 页面级样式：工具卡片 / 工具详情布局 / 学习专区
+ * ============================================================ */
+
+/* ============ 工具 & 学习卡片 ============ */
+.tool-card, .learn-card { padding: 24px 22px; display: flex; flex-direction: column; }
+.tool-card:hover, .learn-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-color: transparent; }
+.card-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--primary-light); margin-bottom: 16px;
+}
+.card-icon .icon { color: var(--primary); }
+.learn-card .card-icon { background: #fff4e0; }
+.learn-card .card-icon .icon { color: #b45309; }
+.card h3 { font-size: 17px; margin-bottom: 8px; }
+.card .desc { font-size: 13.5px; color: var(--text-light); flex: 1; margin-bottom: 14px; }
+.card-meta { display: flex; align-items: center; justify-content: space-between; }
+.card-link { font-size: 13.5px; font-weight: 600; }
+.card-link::after { content: ' →'; }
+
+/* ============ 工具详情页布局 ============ */
+.tool-layout { display: grid; grid-template-columns: 230px 1fr; gap: 22px; align-items: start; }
+.tool-nav { padding: 12px; position: sticky; top: 84px; }
+.tool-nav a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: 10px;
+  color: var(--text-light); font-weight: 500; font-size: 14.5px;
+}
+.tool-nav a:hover { background: var(--primary-light); color: var(--primary); }
+.tool-nav a.active { background: var(--primary); color: #fff; }
+.tool-panel { padding: 30px 32px; }
+
+/* ============ 学习分类详情 ============ */
+.category-head { display: flex; align-items: flex-start; gap: 18px; margin-bottom: 22px; }
+.category-head .card-icon { margin-bottom: 0; width: 60px; height: 60px; font-size: 30px; }
+
+/* ============ 响应式 ============ */
+@media (max-width: 920px) {
+  .tool-layout { grid-template-columns: 1fr; }
+  .tool-nav { position: static; display: flex; overflow-x: auto; gap: 6px; }
+  .tool-nav a { white-space: nowrap; }
+}
+@media (max-width: 640px) {
+  .tool-panel { padding: 22px 18px; }
+}
