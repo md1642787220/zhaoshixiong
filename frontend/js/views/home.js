@@ -4,8 +4,10 @@
  *      下半部分平铺工具与学习板块，省去冗余纵向滚动。
  * ============================================================ */
 import { TOOLS } from '../data/tools.js';
+import { PDF_TOOLS } from '../data/pdfTools.js';
 import { learnApi } from '../api/learn.js';
 import { icon } from '../components/icon.js';
+import { pdfToolCard } from './pdf.js';
 import { esc } from '../utils.js';
 
 function toolCard(t) {
@@ -90,6 +92,14 @@ export default {
         <a class="more" href="#/tools">查看全部 →</a>
       </div>
       <div class="grid-4">${TOOLS.map(toolCard).join('')}</div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>PDF 工具</h2>
+        <a class="more" href="#/pdf">全部 ${PDF_TOOLS.length} 个 →</a>
+      </div>
+      <div class="grid-pdf">${PDF_TOOLS.slice(0, 8).map(pdfToolCard).join('')}</div>
     </section>
 
     <section class="section">

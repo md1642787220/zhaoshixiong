@@ -13,6 +13,19 @@
 | 🎬 视频提取 | 按起止时间段裁剪视频片段（会议录像、课程视频快速截取） |
 | 📄 文本提取 | 从 PDF / TXT / MD / CSV / JSON 文件中提取纯文本 |
 
+### PDF 工具（功能对齐开源 Stirling-Tools/stirling-pdf，前端已就绪、接口预留）
+
+共 **57 个工具**，按官方 6 大分类组织（数据见 `frontend/js/data/pdfTools.js`）：
+
+- **格式转换（9）**：PDF→Office(Word/Excel/PPT)、Office→PDF、PDF→PDF/A、PDF→HTML、HTML→PDF、Markdown→PDF、PDF→图片、图片→PDF、PDF→演示文稿
+- **页面操作（12）**：合并、拆分、旋转、自动纠偏、提取页面、重排页面、添加页码、删除页面、删除空白页、裁剪、多页布局、拼成长页
+- **安全与签名（12）**：加密、解密、修改权限、手写签名、证书签名、移除证书签名、校验签名、水印、清理元数据、内容脱敏、时间戳签名
+- **内容与编辑（10）**：添加附件、添加印章、提取图片、编辑元数据、清除批注、替换颜色、PDF 信息、文本编辑、编辑目录、表单压平
+- **高级处理（9）**：PDF 叠加、小册子拼版、调整缩放、调整对比度、按内容重命名、查看内嵌脚本、扫描件切分、修复、解锁表单
+- **其他（3）**：OCR 文字识别、文档比较、阅读批注
+
+> 所有工具前端交互（上传 + 参数表单 + 提交）已完整实现，提交统一调用 `POST /api/pdf/:action`；后端接口目前为占位 stub（返回"待实现"），可逐工具接入 pdf-lib / LibreOffice / OCRmyPDF / qpdf 等引擎。
+
 ### 学习板块
 
 - **Office/WPS 专区**：办公软件技巧、函数速查、排版规范
@@ -109,6 +122,7 @@ helper/
 | POST | /api/tools/text-extract | 上传 PDF/TXT 等 → 返回纯文本 |
 | GET  | /api/learn/categories | 学习板块分类列表 |
 | GET  | /api/learn/categories/:id | 分类详情与资源列表 |
+| POST | /api/pdf/:action | PDF 工具统一入口（57 个 action，详见 `backend/routes/pdf.js`） |
 
 前后端分离部署时，修改 `frontend/js/config.js` 中的 `API` 常量为后端地址即可（后端已开启 CORS）。
 

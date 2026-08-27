@@ -1,15 +1,5 @@
-# 依赖
 node_modules/
-
-# 运行时产物
-backend/uploads/
-backend/outputs/
 *.log
-
-# 系统文件
+*.err
+stirling_messages.*
 .DS_Store
-Thumbs.db
-
-# 浏览器验证缓存与临时截图
-.playwright-cli/
-*.png

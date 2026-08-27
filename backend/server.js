@@ -4,6 +4,7 @@ const fs = require('fs');
 
 const toolsRouter = require('./routes/tools');
 const learnRouter = require('./routes/learn');
+const pdfRouter = require('./routes/pdf');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,6 +25,7 @@ app.use((req, res, next) => {
 /* ---------- API 路由 ---------- */
 app.use('/api/tools', toolsRouter);
 app.use('/api/learn', learnRouter);
+app.use('/api/pdf', pdfRouter);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'helper-backend', time: new Date().toISOString() });

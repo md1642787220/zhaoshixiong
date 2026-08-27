@@ -35,6 +35,152 @@
 .category-head { display: flex; align-items: flex-start; gap: 18px; margin-bottom: 22px; }
 .category-head .card-icon { margin-bottom: 0; width: 60px; height: 60px; font-size: 30px; }
 
+/* ============ PDF 工具紧凑卡片 ============ */
+.grid-pdf { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.pdf-tool-card { display: flex; align-items: center; gap: 12px; padding: 13px 16px; }
+.pdf-tool-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.ptc-icon {
+  width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+  background: var(--primary-light); color: var(--primary);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.ptc-body { display: flex; flex-direction: column; min-width: 0; }
+.ptc-name { font-weight: 600; font-size: 14.5px; color: var(--text); }
+.ptc-desc { font-size: 12.5px; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* PDF 工具操作页 */
+.pdf-panel { max-width: 760px; margin: 0 auto; }
+.field-hint { font-size: 12px; font-weight: 400; color: var(--text-light); margin-left: 6px; }
+
+/* PDF 板块：标题计数、分类筛选 */
+.count-tag {
+  font-size: 13px; font-weight: 600; color: var(--primary);
+  background: var(--primary-light); padding: 3px 10px; border-radius: 999px; margin-left: 8px; vertical-align: middle;
+}
+.pdf-filters { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0 26px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--border); background: #fff; color: var(--text-light);
+  padding: 8px 14px; border-radius: 999px; cursor: pointer; font-size: 13.5px; font-family: inherit;
+  transition: all .15s;
+}
+.chip:hover { border-color: var(--primary); color: var(--primary); }
+.chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.chip .icon { width: 16px; height: 16px; }
+
+.pdf-group { margin-bottom: 34px; }
+.pdf-group-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.pdf-group-icon {
+  width: 42px; height: 42px; border-radius: 11px; flex-shrink: 0;
+  background: var(--primary-light); color: var(--primary);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.pdf-group-head h2 { font-size: 18px; margin: 0; }
+.pdf-group-head .sub { font-size: 13px; color: var(--text-light); margin: 2px 0 0; }
+
+/* PDF 工具表单 */
+.pdf-form { margin-top: 18px; }
+.form-empty { color: var(--text-light); font-size: 14px; margin: 4px 0 12px; }
+.form-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; margin-bottom: 18px; }
+.field { display: flex; flex-direction: column; gap: 7px; }
+.field-switch { flex-direction: row; align-items: center; gap: 10px; }
+.field-label { font-size: 13.5px; font-weight: 600; color: var(--text); }
+.field-label-inline { font-size: 14px; color: var(--text); cursor: pointer; }
+.input {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 9px;
+  font-size: 14px; font-family: inherit; background: #fff; color: var(--text); box-sizing: border-box;
+}
+.input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+textarea.input { resize: vertical; }
+.input-color { padding: 4px; height: 42px; }
+.range-val { font-size: 13px; color: var(--primary); font-weight: 600; margin-left: 8px; }
+/* 开关 */
+.switch { position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch span {
+  position: absolute; inset: 0; background: #cbd5e1; border-radius: 999px; cursor: pointer; transition: .2s;
+}
+.switch span::before {
+  content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px;
+  background: #fff; border-radius: 50%; transition: .2s;
+}
+.switch input:checked + span { background: var(--primary); }
+.switch input:checked + span::before { transform: translateX(18px); }
+
+.form-hint {
+  display: flex; align-items: flex-start; gap: 7px;
+  background: #fff8ec; border: 1px solid #ffe2b0; color: #92591a;
+  padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 18px;
+}
+.form-hint .icon { flex-shrink: 0; margin-top: 2px; }
+.form-actions { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.btn-primary { background: var(--primary); color: #fff; border: none; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* 拖拽上传区 */
+.dropzone-wrap { margin-bottom: 18px; }
+.dropzone {
+  border: 2px dashed var(--border); border-radius: 14px; padding: 30px 20px; text-align: center;
+  cursor: pointer; background: #fbfcfe; transition: all .15s;
+}
+.dropzone:hover, .dropzone.drag { border-color: var(--primary); background: var(--primary-light); }
+.dz-icon { font-size: 26px; color: var(--primary); margin-bottom: 6px; }
+.dz-label { font-size: 14.5px; font-weight: 600; color: var(--text); }
+.dz-hint { font-size: 12.5px; color: var(--text-light); margin-top: 4px; }
+.dz-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.dz-file {
+  display: flex; align-items: center; gap: 10px; padding: 9px 14px;
+  border: 1px solid var(--border); border-radius: 10px; background: #fff; font-size: 13.5px;
+}
+.dz-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.dz-size { color: var(--text-light); flex-shrink: 0; }
+.dz-del {
+  border: none; background: #fde8e8; color: #c0392b; width: 22px; height: 22px; border-radius: 6px;
+  cursor: pointer; font-size: 16px; line-height: 1; flex-shrink: 0;
+}
+.dz-del:hover { background: #fbd0d0; }
+
+/* 接口说明条 */
+.api-note {
+  margin-top: 20px; padding: 12px 16px; border-radius: 10px;
+  background: #f4f6fb; border: 1px solid var(--border); font-size: 12.5px; color: var(--text-light);
+}
+.api-note code { background: #e8edf6; padding: 1px 6px; border-radius: 5px; color: var(--primary); font-size: 12px; }
+
+/* 状态条（处理中/成功/失败） */
+.status { min-height: 20px; font-size: 13.5px; margin-top: 6px; }
+.status.processing { color: var(--primary); display: flex; align-items: center; gap: 8px; }
+.status.ok { color: #15803d; }
+.status.err { color: #c0392b; }
+.spinner {
+  width: 15px; height: 15px; border: 2px solid var(--primary-light); border-top-color: var(--primary);
+  border-radius: 50%; animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 640px) { .form-fields { grid-template-columns: 1fr; } }
+
+/* 分段选择器（压缩强度 / 旋转角度） */
+.seg-group { display: inline-flex; background: #f1f4fa; border-radius: 10px; padding: 3px; gap: 2px; }
+.seg-btn {
+  border: none; background: transparent; padding: 7px 18px; border-radius: 8px;
+  font-size: 13.5px; cursor: pointer; color: var(--text-light);
+  font-family: inherit; transition: all .15s;
+}
+.seg-btn:hover { color: var(--primary); }
+.seg-btn.active { background: #fff; color: var(--primary); font-weight: 600; box-shadow: 0 1px 4px rgba(30, 58, 138, .12); }
+
+/* 已选文件列表（多文件） */
+.file-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.file-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 14px; border: 1px solid var(--border); border-radius: 10px;
+  background: #fbfcfe; font-size: 13.5px;
+}
+.file-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.file-size { color: var(--text-light); flex-shrink: 0; }
+
 /* ============ 响应式 ============ */
 @media (max-width: 920px) {
   .tool-layout { grid-template-columns: 1fr; }

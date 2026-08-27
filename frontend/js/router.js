@@ -10,6 +10,8 @@ import videoView from './views/video.js';
 import textView from './views/text.js';
 import learnView from './views/learn.js';
 import categoryView from './views/category.js';
+import pdfView from './views/pdf.js';
+import pdfToolView from './views/pdfTool.js';
 import notfoundView from './views/notfound.js';
 
 const routes = [
@@ -21,13 +23,15 @@ const routes = [
   { path: '/tools/text',      view: textView },
   { path: '/learn',           view: learnView },
   { path: '/learn/:id',       view: categoryView },
+  { path: '/pdf',             view: pdfView },
+  { path: '/pdf/:toolId',     view: pdfToolView },
 ];
 
 /** 将 "/learn/:id" 之类的路径模板与实际路径匹配 */
 function matchRoute(pathname) {
   for (const r of routes) {
     if (r.path.includes(':')) {
-      const pattern = '^' + r.path.replace(/:(\w+)/g, '(?<$1>\\w+)') + '$';
+      const pattern = '^' + r.path.replace(/:(\w+)/g, '(?<$1>[\\w-]+)') + '$';
       const m = pathname.match(new RegExp(pattern));
       if (m) return { view: r.view, params: m.groups || {} };
     } else if (r.path === pathname) {
