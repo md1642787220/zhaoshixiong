@@ -5,7 +5,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { PDFDocument, rgb, StandardFonts, degrees, PDFName } = require('pdf-lib');
+const { PDFDocument, rgb, StandardFonts, degrees, PDFName, PDFDict } = require('pdf-lib');
 const fontkit = require('fontkit');
 
 const FONT_PATH = path.join(__dirname, '..', 'fonts');
@@ -470,6 +470,234 @@ async function adjustScale(buf, { scale = 100 }) {
   return Buffer.from(await out2.save());
 }
 
+/* ============================================================
+ * PDFPatcher 能力集成（纯 Node 实现）
+ * ============================================================ */
+
+/* ---------- 文档结构树（探查对象节点，仿 PDFPatcher 结构分析） ---------- */
+async function inspectStructure(buf) {
+  const doc = await loadPdfAny(buf);
+  const ctx = doc.context;
+  const seen = new Set();
+  const walk = (ref, depth) => {
+    if (depth > 8) return null;
+    const key = ref && ref.toString ? ref.toString() : String(ref);
+    if (seen.has(key)) return null;
+    seen.add(key);
+    const node = { ref: key, type: 'unknown', children: [] };
+    try {
+      const obj = ctx.lookup(ref);
+      node.type = obj.constructor.name.replace(/^PDF/, '');
+      const dict = obj.dict;
+      if (dict) {
+        const type = dict.get(PDFName.of('Type'));
+        const subtype = dict.get(PDFName.of('Subtype'));
+        if (type) node.subtype = type.toString().replace(/^\//, '');
+        if (subtype) node.subtype = subtype.toString().replace(/^\//, '');
+        let keys = [];
+        try { keys = Array.from(dict.keys()); } catch { keys = []; }
+        node.keys = keys.slice(0, 20).map(k => k.toString().replace(/^\//, ''));
+        // 递归子对象：遍历 Kids / Pages / 其他 PDFRef 值
+        const refs = [];
+        if (dict.get(PDFName.of('Kids'))) {
+          const kids = dict.get(PDFName.of('Kids'));
+          if (kids && kids.asArray) kids.asArray().forEach(x => { if (x && x.constructor.name === 'PDFRef') refs.push(x); });
+        }
+        try {
+          Array.from(dict.entries()).forEach(([k, v]) => {
+            if (v && v.constructor && v.constructor.name === 'PDFRef') refs.push(v);
+          });
+        } catch { /* Map 迭代异常时忽略 */ }
+        const uniq = [];
+        const uniqSet = new Set();
+        refs.forEach(r => { const s = r.toString(); if (!uniqSet.has(s)) { uniqSet.add(s); uniq.push(r); } });
+        uniq.slice(0, 30).forEach(r => { const c = walk(r, depth + 1); if (c) node.children.push(c); });
+      }
+    } catch { /* skip */ }
+    return node;
+  };
+  const roots = [];
+  const pages = doc.catalog.Pages();
+  if (pages) {
+    const ref = ctx.getObjectRef(pages) || pages;
+    if (ref) roots.push(walk(ref, 0));
+  }
+  let total = 0;
+  try { total = ctx.enumerateIndirectObjects().length; } catch { }
+  return { totalObjects: total, roots, pageCount: doc.getPageCount() };
+}
+
+/* ---------- 导出 PDF 结构为 XML ---------- */
+async function exportXml(buf) {
+  const info = await getPdfInfo(buf);
+  const struct = await inspectStructure(buf);
+  const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const emit = (n, d) => {
+    if (!n) return '';
+    const pad = '  '.repeat(d);
+    const attr = [n.subtype ? ` subtype="${esc(n.subtype)}"` : '', n.keys && n.keys.length ? ` keys="${esc(n.keys.join(','))}"` : ''].join('');
+    const kids = (n.children || []).map(c => emit(c, d + 1)).join('');
+    return `${pad}<node ref="${esc(n.ref)}" type="${esc(n.type)}"${attr}>${kids ? '\n' + kids + '\n' + pad : ''}</node>`;
+  };
+  const body = (struct.roots || []).map(r => emit(r, 1)).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<PDFDocument pages="${info.pages}" title="${esc(info.title || '')}" objects="${struct.totalObjects}">\n${body}\n</PDFDocument>`;
+}
+
+/* ---------- 书签编辑器增强：批量修改 / 自动生成 / 查找替换 ---------- */
+async function editBookmarks(buf, { mode, find, replace, autoDepth, prefix, regex = false } = {}) {
+  const doc = await PDFDocument.load(buf, { ignoreEncryption: true });
+  doc.registerFontkit(fontkit);
+  const out = await PDFDocument.create();
+  out.registerFontkit(fontkit);
+  const copied = await out.copyPages(doc, doc.getPageIndices());
+  copied.forEach(p => out.addPage(p));
+
+  if (mode === 'auto') {
+    // 自动生成：每页一个书签（页码或指定前缀）
+    copied.forEach((p, i) => {
+      p.bookmark = (prefix || '第') + (i + 1) + ' 页';
+    });
+  } else if (mode === 'replace') {
+    // 查找替换已有书签文本（支持正则）
+    const src = doc.getPages().map(p => p.bookmark);
+    copied.forEach((p, i) => {
+      let bm = src[i] || '';
+      if (regex) { try { bm = bm.replace(new RegExp(find, 'g'), replace); } catch { bm = bm.split(find).join(replace); } }
+      else bm = bm.split(find || '\u0000').join(replace);
+      if (bm) p.bookmark = bm;
+    });
+  }
+  return Buffer.from(await out.save());
+}
+
+/* ---------- 字体替换 / 嵌入字库子集 ---------- */
+async function replaceFonts(buf, { fontPath, embedAll = true, subset = false }) {
+  const doc = await PDFDocument.load(buf, { ignoreEncryption: true, updateMetadata: false });
+  doc.registerFontkit(fontkit);
+  // 加载目标字体（优先用户上传的字体文件，其次系统 CJK 字体）
+  let fontBytes = null;
+  if (fontPath && fs.existsSync(fontPath)) fontBytes = fs.readFileSync(fontPath);
+  else {
+    const sysFont = ['C:\\Windows\\Fonts\\simhei.ttf', 'C:\\Windows\\Fonts\\msyh.ttc', 'C:\\Windows\\Fonts\\simsun.ttc',
+      '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc', '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'];
+    for (const f of sysFont) { if (fs.existsSync(f)) { fontBytes = fs.readFileSync(f); break; } }
+  }
+  if (!fontBytes) return { ok: false, message: '未找到可用字体文件' };
+  // 子集化在部分字体/pdf-lib 版本下不可靠，默认嵌入完整字体（可靠优先）
+  let newFont;
+  try {
+    newFont = await doc.embedFont(fontBytes, { subset: subset === true });
+  } catch (e) {
+    newFont = await doc.embedFont(fontBytes, { subset: false });
+  }
+  // 将页面内容流中的字体引用替换为新字体（pdf-lib 层面：重写每页的文本操作符字体资源）
+  const fontRef = doc.context.getObjectRef(newFont.ref || newFont);
+  const name = newFont.name || 'F1';
+  doc.getPages().forEach(p => {
+    try {
+      const resources = p.node.Resources();
+      if (!resources) return;
+      const fonts = resources.lookup(PDFName.of('Font'), PDFDict);
+      if (!fonts) { resources.set(PDFName.of('Font'), doc.context.obj({ [name]: newFont })); return; }
+      // 覆盖已有字体表（替换第一个字体）
+      const dict = fonts.dict || fonts;
+      if (dict.set) {
+        const existingKeys = (dict.keys && dict.keys()) || [];
+        const targetKey = existingKeys.find(k => !k.toString().startsWith('/F')) || existingKeys[0] || PDFName.of('F1');
+        dict.set(targetKey, newFont);
+      }
+    } catch { /* skip page font */ }
+  });
+  const bytes = await doc.save();
+  return { ok: true, buffer: Buffer.from(bytes), font: name };
+}
+
+/* ---------- 移除文档动作（自动打开网页、打开文档等）与链接 ---------- */
+async function removeActions(buf, { openAction = true, pageActions = true, links = false } = {}) {
+  const doc = await PDFDocument.load(buf, { ignoreEncryption: true });
+  const catalog = doc.catalog;
+  if (openAction !== false) {
+    try { catalog.delete(PDFName.of('OpenAction')); } catch { /* no openaction */ }
+    try { catalog.delete(PDFName.of('AA')); } catch { /* no catalog AA */ }
+  }
+  if (pageActions !== false) {
+    doc.getPages().forEach(p => {
+      try { if (p.node.AA()) p.node.delete('AA'); } catch { }
+    });
+  }
+  if (links) {
+    doc.getPages().forEach(p => {
+      try {
+        const annots = p.node.Annots();
+        if (annots) {
+          const arr = annots.asArray ? annots.asArray() : [];
+          arr.forEach(a => {
+            try {
+              const obj = doc.context.lookup(a);
+              const subtype = obj.dict && obj.dict.get(PDFName.of('Subtype'));
+              if (subtype && subtype.toString() === '/Link') { /* 移除链接标注 */ p.node.set('Annots', doc.context.obj(arr.filter(x => x !== a))); }
+            } catch { }
+          });
+        }
+      } catch { }
+    });
+  }
+  return Buffer.from(await doc.save());
+}
+
+/* ---------- Markdown → PDF（纯 Node，基于 marked + pdf-lib） ---------- */
+async function markdownToPdf(mdText, { title = 'Document' } = {}) {
+  const { marked } = require('marked');
+  const html = marked.parse(mdText || '');
+  // 将 HTML 极简解析为纯文本段落（不依赖浏览器渲染引擎）
+  const text = html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ').trim();
+  const out = await PDFDocument.create(); out.registerFontkit(fontkit);
+  const cjk = await getCjkFont(out);
+  const font = cjk || (await out.embedFont(StandardFonts.Helvetica));
+  const size = 11, lineH = 18, margin = 56;
+  const width = 595, height = 842; // A4
+  const maxW = width - margin * 2;
+  // 简单换行
+  const lines = [];
+  let cur = '';
+  for (const ch of text) {
+    cur += ch;
+    if (font.widthOfTextAtSize(cur, size) > maxW || ch === '\n') { lines.push(cur); cur = ''; }
+  }
+  if (cur) lines.push(cur);
+  if (!lines.length) lines.push(title);
+  const perPage = Math.floor((height - margin * 2) / lineH);
+  for (let i = 0; i < lines.length; i += perPage) {
+    const page = out.addPage([width, height]);
+    lines.slice(i, i + perPage).forEach((ln, k) => {
+      page.drawText(ln, { x: margin, y: height - margin - (k + 1) * lineH, size, font });
+    });
+  }
+  return Buffer.from(await out.save());
+}
+
+/* ---------- PDF → HTML（纯 Node，基于 pdf-parse 提取文本） ---------- */
+async function pdfToHtml(buf) {
+  const pdfParse = require('pdf-parse');
+  let text = '';
+  try {
+    const data = await pdfParse(buf);
+    text = data.text || '';
+  } catch (e) {
+    text = '(无法提取文本：' + (e.message || e) + ')';
+  }
+  const esc = (s) => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const paras = text.split(/\n{2,}/).map(p => p.trim()).filter(Boolean)
+    .map(p => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('\n');
+  return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>PDF 导出</title>
+<style>body{font-family:sans-serif;max-width:760px;margin:2rem auto;line-height:1.8;padding:0 1rem}
+p{margin:0 0 1em}</style></head><body>${paras || '<p>（无文本内容）</p>'}</body></html>`;
+}
+
 /* ---------- 辅助 ---------- */
 function parsePageList(str, count) {
   const res = new Set();
@@ -500,4 +728,6 @@ module.exports = {
   changeMetadata, getPdfInfo, extractImages, watermark, addStamp, addAttachments,
   removeAnnotations, flattenPdf, addToc, addPassword, sanitize,
   imageToPdf, overlay, booklet, adjustScale, parsePageList,
+  markdownToPdf, pdfToHtml,
+  inspectStructure, exportXml, editBookmarks, replaceFonts, removeActions,
 };

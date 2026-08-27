@@ -27,6 +27,7 @@ const PLANNED = [
   'overlay', 'booklet', 'adjust-scale', 'adjust-contrast', 'auto-rename', 'show-js',
   'scanner-split', 'repair', 'unlock-forms',
   'ocr', 'compare', 'read-annotate',
+  'inspect-structure', 'export-xml', 'edit-bookmarks', 'replace-fonts', 'remove-actions',
 ];
 
 /* 统一的文件读取 */
@@ -207,11 +208,21 @@ router.post('/:action', upload.any(), async (req, res) => {
       }
       case 'to-image': return needEngine(res, action, 'Ghostscript / poppler（PDF 页面渲染为图片）');
       case 'to-pdfa': return needEngine(res, action, 'Ghostscript（PDF/A 规范化）');
-      case 'markdown-to-pdf': return needEngine(res, action, 'marked + 渲染引擎（或 wkhtmltopdf）');
+      case 'markdown-to-pdf': {
+        const mdText = files[0] ? files[0].toString('utf8') : (body.text || '');
+        if (!mdText) return res.status(400).json({ ok: false, message: '请上传 .md 文件或提供文本' });
+        const buf = await P.markdownToPdf(mdText, body);
+        return sendPdf(res, buf, 'converted.pdf');
+      }
       case 'convert-office': return needEngine(res, action, 'LibreOffice / Gotenberg（Office ⇄ PDF）');
       case 'to-pdf': return needEngine(res, action, 'LibreOffice / Gotenberg');
       case 'html-to-pdf': return needEngine(res, action, 'wkhtmltopdf / Gotenberg');
-      case 'to-html': return needEngine(res, action, 'PDF 文本提取 + HTML 生成');
+      case 'to-html': {
+        const html = await P.pdfToHtml(files[0]);
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.setHeader('Content-Disposition', 'attachment; filename="converted.html"');
+        return res.send(html);
+      }
       case 'to-presentation': return needEngine(res, action, 'LibreOffice');
 
       /* ---------- 高级 ---------- */
@@ -242,6 +253,35 @@ router.post('/:action', upload.any(), async (req, res) => {
         return sendPdf(res, Buffer.from(buf), 'repaired.pdf');
       }
       case 'unlock-forms': return needEngine(res, action, 'qpdf / mutool');
+
+      /* ---------- PDFPatcher 能力（纯 Node） ---------- */
+      case 'inspect-structure': {
+        const struct = await P.inspectStructure(files[0]);
+        return res.json({ ok: true, structure: struct });
+      }
+      case 'export-xml': {
+        const xml = await P.exportXml(files[0]);
+        res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+        res.setHeader('Content-Disposition', 'attachment; filename="structure.xml"');
+        return res.send(xml);
+      }
+      case 'edit-bookmarks': {
+        const buf = await P.editBookmarks(files[0], body);
+        return sendPdf(res, buf, 'bookmarked.pdf');
+      }
+      case 'replace-fonts': {
+        const fontFile = readParamFile(req, 'font');
+        let fontPath = null;
+        if (fontFile) { fontPath = P.tmpFile('ttf'); fs.writeFileSync(fontPath, fontFile.buf); }
+        const r = await P.replaceFonts(files[0], { ...body, fontPath });
+        if (fontPath) { try { fs.unlinkSync(fontPath); } catch { } }
+        if (r && r.ok === false) return res.status(400).json(r);
+        return sendPdf(res, r.buffer, 'font-replaced.pdf');
+      }
+      case 'remove-actions': {
+        const buf = await P.removeActions(files[0], body);
+        return sendPdf(res, buf, 'actions-removed.pdf');
+      }
 
       /* ---------- 其他 ---------- */
       case 'ocr': return needEngine(res, action, 'OCRmyPDF + Tesseract');

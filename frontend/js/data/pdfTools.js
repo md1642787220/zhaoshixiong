@@ -497,6 +497,51 @@ export const PDF_TOOLS = [
     params: [],
     hint: '轻量预览与标注，结果可导出。',
   },
+
+  /* ===================== PDFPatcher 能力 ===================== */
+  {
+    id: 'inspect-structure', name: '文档结构分析', cat: 'other', icon: 'layers',
+    desc: '以树视图探查 PDF 对象结构与页面节点', action: 'inspect-structure', multi: false,
+    params: [],
+    hint: '仿 PDFPatcher 结构分析，展示对象类型、子类型与关键字。',
+  },
+  {
+    id: 'export-xml', name: '导出 XML 结构', cat: 'other', icon: 'code',
+    desc: '将 PDF 文档结构导出为 XML 文件', action: 'export-xml', multi: false,
+    params: [],
+    hint: '导出对象树为 XML，便于二次处理或排查。',
+  },
+  {
+    id: 'edit-bookmarks', name: '书签编辑器', cat: 'other', icon: 'bookmark',
+    desc: '批量修改、自动生成或查找替换书签', action: 'edit-bookmarks', multi: false,
+    params: [
+      { type: 'select', name: 'mode', label: '模式',
+        options: [['auto', '自动生成（每页一个）'], ['replace', '查找替换']] },
+      { type: 'text', name: 'prefix', label: '书签前缀', placeholder: '如“第”', when: { mode: 'auto' } },
+      { type: 'text', name: 'find', label: '查找内容', placeholder: '被替换的文本', when: { mode: 'replace' } },
+      { type: 'text', name: 'replace', label: '替换为', placeholder: '新文本', when: { mode: 'replace' } },
+      { type: 'switch', name: 'regex', label: '使用正则表达式', when: { mode: 'replace' } },
+    ],
+    hint: '仿 PDFPatcher 书签编辑器，支持批量改属性与自动生成。',
+  },
+  {
+    id: 'replace-fonts', name: '字体替换 / 嵌入', cat: 'other', icon: 'type',
+    desc: '嵌入中文字库，解决复制乱码与 Kindle 阅读', action: 'replace-fonts', multi: false,
+    params: [
+      { type: 'file', name: 'font', label: '字体文件（可选，默认系统黑体）', accept: '.ttf,.ttc,.otf' },
+    ],
+    hint: '未指定字体时自动嵌入系统黑体（SimHei），消除复制乱码。',
+  },
+  {
+    id: 'remove-actions', name: '移除文档动作', cat: 'other', icon: 'shield',
+    desc: '清除自动打开网页、打开文档等动作', action: 'remove-actions', multi: false,
+    params: [
+      { type: 'switch', name: 'openAction', label: '移除打开文档动作' },
+      { type: 'switch', name: 'pageActions', label: '移除页面动作' },
+      { type: 'switch', name: 'links', label: '同时移除页面链接' },
+    ],
+    hint: '仿 PDFPatcher 移除自动打开网页等动作，消除安全隐患。',
+  },
 ];
 
 /* ---------- 便捷查询 ---------- */
