@@ -1,0 +1,9 @@
+.git
+.gitignore
+**/node_modules
+backend/.env
+**/*.log
+deploy-stirling.sh
+stirling-data
+zhaoshixiong
+README.md

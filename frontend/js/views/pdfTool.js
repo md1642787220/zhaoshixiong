@@ -1,7 +1,7 @@
 /* ============================================================
  * views/pdfTool.js - 单个 PDF 工具操作页
  * 通用渲染：上传区 + 参数表单（由 data/pdfTools.js 的 params 定义）
- * 提交：POST /api/pdf/:action  （后端接口预留，暂返回“后端开发中”）
+ * 提交：POST /api/pdf/:action  （后端已实现，支持 JSON/download 或 PDF/ZIP 文件流）
  * ============================================================ */
 import { getPdfTool, getPdfCategory } from '../data/pdfTools.js';
 import { icon } from '../components/icon.js';
@@ -168,16 +168,36 @@ export default {
 
       try {
         const res = await fetch(`/api/pdf/${tool.action}`, { method: 'POST', body: fd });
+        const ct = (res.headers.get('content-type') || '').toLowerCase();
+
+        // 后端直接返回文件流（PDF / ZIP），立即触发下载
+        if (res.ok && (ct.includes('application/pdf') || ct.includes('application/zip'))) {
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          const ext = ct.includes('application/pdf') ? 'pdf' : 'zip';
+          const cd = res.headers.get('content-disposition') || '';
+          const filename = (cd.match(/filename[^;=\n]*=(['"]?)([^'"\s;]+)\1/) || [])[2] || `result.${ext}`;
+          a.href = url;
+          a.download = filename;
+          a.click();
+          URL.revokeObjectURL(url);
+          setStatus(statusEl, 'ok', '处理完成，文件已开始下载');
+          return;
+        }
+
+        // JSON 响应（download 链接 / 提示信息）
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.ok) {
           setStatus(statusEl, 'ok', data.message || '处理完成');
           if (data.download) {
             const a = document.createElement('a');
-            a.href = data.download; a.download = data.filename || 'result';
+            a.href = data.download;
+            a.download = data.filename || 'result';
             a.click();
           }
         } else {
-          // 后端未实现时给出统一提示
+          // 后端未实现或处理失败
           setStatus(statusEl, 'err',
             data.message || '后端接口尚未实现（/api/pdf/' + tool.action + '）。前端交互已就绪，待后端接入。');
         }

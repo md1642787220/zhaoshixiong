@@ -7,7 +7,7 @@ import { TOOLS } from '../data/tools.js';
 import { PDF_TOOLS } from '../data/pdfTools.js';
 import { learnApi } from '../api/learn.js';
 import { icon } from '../components/icon.js';
-import { pdfToolCard } from './pdf.js';
+import { pdfToolCard, applyPdfCaps } from './pdf.js';
 import { esc } from '../utils.js';
 
 function toolCard(t) {
@@ -115,5 +115,6 @@ export default {
     const box = document.getElementById('home-learn');
     const list = await learnApi.categories();
     box.innerHTML = list.map(learnCard).join('');
+    applyPdfCaps();
   },
 };

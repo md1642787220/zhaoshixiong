@@ -13,6 +13,13 @@
 import { API, API_BASE } from '../config.js';
 
 export const pdfApi = {
+  /** 能力清单：{ action: { available, source } } */
+  async capabilities() {
+    const res = await fetch(`${API}${API_BASE}/pdf/capabilities`);
+    const data = await res.json().catch(() => ({}));
+    return data.capabilities || {};
+  },
+
   /**
    * 通用 PDF 处理
    * @param {string} toolId  工具标识，如 merge / compress / pdf-to-word

@@ -31,6 +31,16 @@ const PLANNED = [
   'inspect-structure', 'export-xml', 'edit-bookmarks', 'replace-fonts', 'remove-actions',
 ];
 
+/* 需外部引擎（Stirling 转发或降级）的 action；其余为纯 Node（pdf-lib）实现 */
+const ENGINE_ACTIONS = new Set([
+  'single-large-page', 'text-editor', 'replace-color', 'remove-password',
+  'change-permissions', 'sign', 'cert-sign', 'remove-cert-sign',
+  'validate-signature', 'redact', 'timestamp', 'to-image', 'to-pdfa',
+  'convert-office', 'to-pdf', 'html-to-pdf', 'to-presentation',
+  'adjust-contrast', 'show-js', 'scanner-split', 'unlock-forms', 'ocr',
+  'compare', 'read-annotate',
+]);
+
 /* 统一的文件读取 */
 function readFiles(req) {
   // 兼容前端两种字段命名：files（pdfApi 通用约定）/ file（旧版单文件约定）
@@ -39,6 +49,14 @@ function readFiles(req) {
   if (f.length) return f.map(x => fs.readFileSync(x.path));
   const g = list.filter(x => x.fieldname === 'file');
   return g.map(x => fs.readFileSync(x.path));
+}
+/* 同 readFiles，但保留原始文件名/mimetype（供 Stirling 识别 Office 等文件类型） */
+function readFilesWithMeta(req) {
+  const list = (req.files || []);
+  const f = list.filter(x => x.fieldname === 'files');
+  if (f.length) return f.map(x => ({ buf: fs.readFileSync(x.path), name: x.originalname, mimetype: x.mimetype }));
+  const g = list.filter(x => x.fieldname === 'file');
+  return g.map(x => ({ buf: fs.readFileSync(x.path), name: x.originalname, mimetype: x.mimetype }));
 }
 function readParamFile(req, name) {
   // 同名字段也兼容单/复数（background / backgrounds、attachment / attachments）
@@ -80,7 +98,7 @@ function needEngine(res, action, engine) {
 /* 引擎依赖功能：优先转发 Stirling-PDF（若已配置），否则返回降级提示 */
 async function engineOrForward(req, res, action, engine, files, body) {
   if (Stirling.enabled() && Stirling.isForwardable(action)) {
-    const r = await Stirling.forward(action, files, body);
+    const r = await Stirling.forward(action, readFilesWithMeta(req), body);
     if (r.ok && r.buffer) {
       const ext = (r.contentType || '').includes('zip') ? 'zip'
         : (r.contentType || '').includes('json') ? 'json'
@@ -96,6 +114,21 @@ async function engineOrForward(req, res, action, engine, files, body) {
   }
   return needEngine(res, action, engine);
 }
+
+/* 能力清单：前端据此给「暂未开放」的功能打角标 */
+router.get('/capabilities', (req, res) => {
+  const capabilities = {};
+  for (const a of PLANNED) {
+    if (!ENGINE_ACTIONS.has(a)) {
+      capabilities[a] = { available: true, source: 'node' };          // 纯 Node 实现
+    } else if (Stirling.enabled() && Stirling.isForwardable(a)) {
+      capabilities[a] = { available: true, source: 'stirling' };      // Stirling 转发
+    } else {
+      capabilities[a] = { available: false, source: 'unavailable' };  // 暂未开放
+    }
+  }
+  res.json({ ok: true, capabilities });
+});
 
 router.post('/:action', upload.any(), async (req, res) => {
   const { action } = req.params;

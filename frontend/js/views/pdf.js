@@ -3,19 +3,36 @@
  * 数据来源：data/pdfTools.js（对应 Stirling-PDF 全部工具）
  * ============================================================ */
 import { PDF_CATEGORIES, PDF_TOOLS } from '../data/pdfTools.js';
+import { pdfApi } from '../api/pdf.js';
 import { icon } from '../components/icon.js';
 import { esc } from '../utils.js';
 
 /** 首页紧凑卡片（grid-pdf 用，home.js 复用） */
 export function pdfToolCard(t) {
   return `
-  <a class="card pdf-tool-card" href="#/pdf/${t.id}">
+  <a class="card pdf-tool-card" href="#/pdf/${t.id}" data-action="${t.action}">
     <div class="ptc-icon">${icon(t.icon, 22)}</div>
     <div class="ptc-body">
       <div class="ptc-name">${esc(t.name)}</div>
       <div class="ptc-desc">${esc(t.desc)}</div>
     </div>
   </a>`;
+}
+
+/** 拉取能力清单，给「暂未开放」的 PDF 工具卡片加角标 */
+export async function applyPdfCaps() {
+  let caps = {};
+  try { caps = await pdfApi.capabilities(); } catch { return; }
+  document.querySelectorAll('.pdf-tool-card[data-action]').forEach(card => {
+    const cap = caps[card.dataset.action];
+    if (cap && cap.available === false) {
+      const name = card.querySelector('.ptc-name');
+      if (name && !name.querySelector('.ptc-tag')) {
+        name.insertAdjacentHTML('beforeend', '<span class="ptc-tag">暂未开放</span>');
+      }
+      card.classList.add('is-closed');
+    }
+  });
 }
 
 export default {
@@ -69,5 +86,6 @@ export default {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     });
+    applyPdfCaps();
   },
 };

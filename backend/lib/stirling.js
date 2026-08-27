@@ -37,32 +37,43 @@ function enabled() {
  */
 const ACTION_MAP = {
   /* 转换 */
-  'convert-office':  { path: '/api/v1/convert/office/pdf' },        // Office -> PDF
-  'to-pdf':          { path: '/api/v1/convert/office/pdf' },
-  'to-pdfa':         { path: '/api/v1/convert/pdf/pdfa' },
+  'convert-office': {
+    path: (params) => {
+      const t = (params && params.target || 'docx').toLowerCase();
+      if (t === 'xlsx') return '/api/v1/convert/pdf/xlsx';
+      if (t === 'pptx') return '/api/v1/convert/pdf/presentation';
+      return '/api/v1/convert/pdf/word';
+    },
+    paramsMap: { target: 'outputFormat' },
+    defaults: { pageNumbers: 'all' },
+  },
+  'to-pdf':          { path: '/api/v1/convert/file/pdf', drop: ['engine'] },
+  'to-pdfa':         {
+    path: '/api/v1/convert/pdf/pdfa',
+    paramsMap: { level: 'outputFormat' },
+    valueMap: { level: { 'PDF/A-1b': 'pdfa-1b', 'PDF/A-2b': 'pdfa-2b', 'PDF/A-3b': 'pdfa-3b' } },
+  },
   'html-to-pdf':     { path: '/api/v1/convert/html/pdf' },
-  'to-presentation': { path: '/api/v1/convert/pdf/presentation' },
-  'to-image':        { path: '/api/v1/convert/pdf/img' },
+  'to-presentation': { path: '/api/v1/convert/pdf/presentation', paramsMap: { format: 'outputFormat' } },
+  'to-image':        {
+    path: '/api/v1/convert/pdf/img',
+    paramsMap: { format: 'imageFormat' },
+    valueMap: { single: { '1': 'single', '0': 'multiple' } },
+    defaults: { pageNumbers: 'all', singleOrMultiple: 'multiple', colorType: 'color' },
+  },
   /* 安全 */
   'remove-password': { path: '/api/v1/security/remove-password' },
-  'change-permissions': { path: '/api/v1/security/change-permissions' },
-  'sign':            { path: '/api/v1/security/sign' },
   'cert-sign':       { path: '/api/v1/security/cert-sign' },
   'remove-cert-sign':{ path: '/api/v1/security/remove-cert-sign' },
   'validate-signature': { path: '/api/v1/security/validate-signature' },
   'redact':          { path: '/api/v1/security/redact' },
-  /* 内容编辑 */
-  'replace-color':   { path: '/api/v1/misc/change-color' },
-  'text-editor':     { path: '/api/v1/misc/add-text' },
   /* 高级 */
-  'adjust-contrast': { path: '/api/v1/misc/contrast' },
-  'show-js':         { path: '/api/v1/misc/remove-blanks' },       // 占位，需实测
+  'show-js':         { path: '/api/v1/misc/show-javascript' },
   'scanner-split':   { path: '/api/v1/misc/auto-split-pdf' },
-  'unlock-forms':    { path: '/api/v1/security/unlock-form' },
+  'unlock-forms':    { path: '/api/v1/misc/unlock-pdf-forms' },
   /* 其他 */
   'ocr':             { path: '/api/v1/misc/ocr-pdf' },
-  'compare':         { path: '/api/v1/misc/compare' },
-  'single-large-page': { path: '/api/v1/misc/convert-pdf-to-single-page' },
+  'single-large-page': { path: '/api/v1/general/pdf-to-single-page' },
 };
 
 /**
@@ -84,10 +95,35 @@ async function forward(action, files, params = {}) {
     return { ok: false, message: '缺少上传文件' };
   }
 
-  const url = BASE.replace(/\/$/, '') + map.path;
+  const targetPath = typeof map.path === 'function' ? map.path(params) : map.path;
+  const url = BASE.replace(/\/$/, '') + targetPath;
+  const first = files[0];
+  const buf = Buffer.isBuffer(first) ? first : (first && first.buf);
+  if (!buf) return { ok: false, message: '缺少上传文件' };
+  const filename = (first && first.name) || 'input.pdf';
+  const mime = (first && first.mimetype) || 'application/pdf';
+
+  // 参数映射（字段名转换、值转换、丢弃多余参数、补默认值）
+  const mappedParams = {};
+  Object.entries(params || {}).forEach(([k, v]) => {
+    if (map.drop && map.drop.includes(k)) return;
+    const newKey = (map.paramsMap && map.paramsMap[k]) || k;
+    let newVal = v;
+    if (map.valueMap && map.valueMap[k]) {
+      const vm = map.valueMap[k];
+      newVal = vm[String(v)] !== undefined ? vm[String(v)] : (vm[v] !== undefined ? vm[v] : v);
+    }
+    mappedParams[newKey] = newVal;
+  });
+  if (map.defaults) {
+    Object.entries(map.defaults).forEach(([k, v]) => {
+      if (mappedParams[k] === undefined) mappedParams[k] = v;
+    });
+  }
+
   const form = new FormData();
-  form.append('fileInput', files[0], { filename: 'input.pdf', contentType: 'application/pdf' });
-  Object.entries(params || {}).forEach(([k, v]) => form.append(k, String(v)));
+  form.append('fileInput', buf, { filename, contentType: mime });
+  Object.entries(mappedParams).forEach(([k, v]) => form.append(k, String(v)));
 
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT);
