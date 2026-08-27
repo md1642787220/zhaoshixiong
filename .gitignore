@@ -3,3 +3,7 @@ node_modules/
 *.err
 stirling_messages.*
 .DS_Store
+.env
+stirling-data/
+.playwright-cli/
+backend/_verify/

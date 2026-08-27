@@ -4,8 +4,8 @@
   "description": "Helper 助手后端服务 - 为教师、公务员及体制内员工打造的实用工具箱",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "start": "node --env-file-if-exists=.env server.js",
+    "dev": "node --watch --env-file-if-exists=.env server.js"
   },
   "engines": {
     "node": ">=16"
