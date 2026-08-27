@@ -31,8 +31,8 @@ export const pdfApi = {
     });
 
     if (!res.ok) {
-      await res.json().catch(() => ({}));
-      throw new Error('该功能接口预留中，后端实现后即可直接使用');
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || `请求失败（${res.status}）`);
     }
     return res.blob();
   },

@@ -31,11 +31,18 @@ const PLANNED = [
 
 /* 统一的文件读取 */
 function readFiles(req) {
-  const files = (req.files || []).filter(f => f.fieldname === 'file');
-  return files.map(f => fs.readFileSync(f.path));
+  // 兼容前端两种字段命名：files（pdfApi 通用约定）/ file（旧版单文件约定）
+  const list = (req.files || []);
+  const f = list.filter(x => x.fieldname === 'files');
+  if (f.length) return f.map(x => fs.readFileSync(x.path));
+  const g = list.filter(x => x.fieldname === 'file');
+  return g.map(x => fs.readFileSync(x.path));
 }
 function readParamFile(req, name) {
-  const f = (req.files || []).find(x => x.fieldname === name);
+  // 同名字段也兼容单/复数（background / backgrounds、attachment / attachments）
+  const list = (req.files || []);
+  let f = list.find(x => x.fieldname === name);
+  if (!f) f = list.find(x => x.fieldname === (name + 's'));
   return f ? { buf: fs.readFileSync(f.path), name: f.originalname } : null;
 }
 const b = (s) => (s === '1' || s === true || s === 'true');

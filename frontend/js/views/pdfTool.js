@@ -6,7 +6,7 @@
 import { getPdfTool, getPdfCategory } from '../data/pdfTools.js';
 import { icon } from '../components/icon.js';
 import { esc, setStatus, toast } from '../utils.js';
-import Dropzone from '../components/dropzone.js';
+import { Dropzone } from '../components/dropzone.js';
 
 /** 渲染某个参数控件 */
 function renderParam(p, prefix = '') {
