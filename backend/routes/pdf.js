@@ -11,6 +11,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const P = require('../lib/pdf');
+const Stirling = require('../lib/stirling');
 
 const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'helper-pdf-'));
 const upload = multer({ dest: tmpRoot, limits: { fileSize: 500 * 1024 * 1024 } });
@@ -76,6 +77,26 @@ function needEngine(res, action, engine) {
   });
 }
 
+/* 引擎依赖功能：优先转发 Stirling-PDF（若已配置），否则返回降级提示 */
+async function engineOrForward(req, res, action, engine, files, body) {
+  if (Stirling.enabled() && Stirling.isForwardable(action)) {
+    const r = await Stirling.forward(action, files, body);
+    if (r.ok && r.buffer) {
+      const ext = (r.contentType || '').includes('zip') ? 'zip'
+        : (r.contentType || '').includes('json') ? 'json'
+        : (r.contentType || '').includes('image') ? 'png' : 'pdf';
+      res.setHeader('Content-Type', r.contentType || 'application/octet-stream');
+      res.setHeader('Content-Disposition', `attachment; filename="${(r.filename || action)}.${ext}"`);
+      return res.send(r.buffer);
+    }
+    if (r.ok && r.json) {
+      return res.json({ ok: true, ...r.json });
+    }
+    return res.status(200).json({ ok: false, message: r.message || 'Stirling-PDF 转发失败' });
+  }
+  return needEngine(res, action, engine);
+}
+
 router.post('/:action', upload.any(), async (req, res) => {
   const { action } = req.params;
   const body = req.body || {};
@@ -134,7 +155,7 @@ router.post('/:action', upload.any(), async (req, res) => {
         return sendPdf(res, buf, 'layout.pdf');
       }
       case 'single-large-page': {
-        return needEngine(res, action, 'Ghostscript / pdf-lib 渲染（长图导出）');
+        return engineOrForward(req, res, action, 'Ghostscript / pdf-lib 渲染（长图导出）', files, body);
       }
 
       /* ---------- 内容编辑 ---------- */
@@ -180,50 +201,50 @@ router.post('/:action', upload.any(), async (req, res) => {
         const buf = await P.addToc(files[0], body);
         return sendPdf(res, buf, 'with-toc.pdf');
       }
-      case 'text-editor': return needEngine(res, action, 'PDF 文本层编辑库（如 pdf-lib + 文本提取）');
-      case 'replace-color': return needEngine(res, action, 'Ghostscript（色彩空间处理）');
+      case 'text-editor': return engineOrForward(req, res, action, 'PDF 文本层编辑库（如 pdf-lib + 文本提取）', files, body);
+      case 'replace-color': return engineOrForward(req, res, action, 'Ghostscript（色彩空间处理）', files, body);
 
       /* ---------- 安全 ---------- */
       case 'add-password': {
         const buf = await P.addPassword(files[0], body);
         return sendPdf(res, buf, 'encrypted.pdf');
       }
-      case 'remove-password': return needEngine(res, action, 'qpdf（解密需原密码，node 端无原生实现）');
-      case 'change-permissions': return needEngine(res, action, 'qpdf');
-      case 'sign': return needEngine(res, action, '签名库（如 node-signpdf）');
-      case 'cert-sign': return needEngine(res, action, 'PKCS12 签名库（如 node-signpdf）');
-      case 'remove-cert-sign': return needEngine(res, action, 'qpdf / mutool');
-      case 'validate-signature': return needEngine(res, action, '签名校验库');
+      case 'remove-password': return engineOrForward(req, res, action, 'qpdf（解密需原密码，node 端无原生实现）', files, body);
+      case 'change-permissions': return engineOrForward(req, res, action, 'qpdf', files, body);
+      case 'sign': return engineOrForward(req, res, action, '签名库（如 node-signpdf）', files, body);
+      case 'cert-sign': return engineOrForward(req, res, action, 'PKCS12 签名库（如 node-signpdf）', files, body);
+      case 'remove-cert-sign': return engineOrForward(req, res, action, 'qpdf / mutool', files, body);
+      case 'validate-signature': return engineOrForward(req, res, action, '签名校验库', files, body);
       case 'sanitize': {
         const buf = await P.sanitize(files[0], body);
         return sendPdf(res, buf, 'sanitized.pdf');
       }
-      case 'redact': return needEngine(res, action, '内容遮盖需精确坐标，建议前端标注后由引擎处理');
-      case 'timestamp': return needEngine(res, action, 'TSA 时间戳服务');
+      case 'redact': return engineOrForward(req, res, action, '内容遮盖需精确坐标，建议前端标注后由引擎处理', files, body);
+      case 'timestamp': return engineOrForward(req, res, action, 'TSA 时间戳服务', files, body);
 
       /* ---------- 转换 ---------- */
       case 'image-to-pdf': {
         const buf = await P.imageToPdf(files, body);
         return sendPdf(res, buf, 'from-images.pdf');
       }
-      case 'to-image': return needEngine(res, action, 'Ghostscript / poppler（PDF 页面渲染为图片）');
-      case 'to-pdfa': return needEngine(res, action, 'Ghostscript（PDF/A 规范化）');
+      case 'to-image': return engineOrForward(req, res, action, 'Ghostscript / poppler（PDF 页面渲染为图片）', files, body);
+      case 'to-pdfa': return engineOrForward(req, res, action, 'Ghostscript（PDF/A 规范化）', files, body);
       case 'markdown-to-pdf': {
         const mdText = files[0] ? files[0].toString('utf8') : (body.text || '');
         if (!mdText) return res.status(400).json({ ok: false, message: '请上传 .md 文件或提供文本' });
         const buf = await P.markdownToPdf(mdText, body);
         return sendPdf(res, buf, 'converted.pdf');
       }
-      case 'convert-office': return needEngine(res, action, 'LibreOffice / Gotenberg（Office ⇄ PDF）');
-      case 'to-pdf': return needEngine(res, action, 'LibreOffice / Gotenberg');
-      case 'html-to-pdf': return needEngine(res, action, 'wkhtmltopdf / Gotenberg');
+      case 'convert-office': return engineOrForward(req, res, action, 'LibreOffice / Gotenberg（Office ⇄ PDF）', files, body);
+      case 'to-pdf': return engineOrForward(req, res, action, 'LibreOffice / Gotenberg', files, body);
+      case 'html-to-pdf': return engineOrForward(req, res, action, 'wkhtmltopdf / Gotenberg', files, body);
       case 'to-html': {
         const html = await P.pdfToHtml(files[0]);
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.setHeader('Content-Disposition', 'attachment; filename="converted.html"');
         return res.send(html);
       }
-      case 'to-presentation': return needEngine(res, action, 'LibreOffice');
+      case 'to-presentation': return engineOrForward(req, res, action, 'LibreOffice', files, body);
 
       /* ---------- 高级 ---------- */
       case 'overlay': {
@@ -240,19 +261,19 @@ router.post('/:action', upload.any(), async (req, res) => {
         const buf = await P.adjustScale(files[0], body);
         return sendPdf(res, buf, 'scaled.pdf');
       }
-      case 'adjust-contrast': return needEngine(res, action, 'Ghostscript（图像滤镜）');
+      case 'adjust-contrast': return engineOrForward(req, res, action, 'Ghostscript（图像滤镜）', files, body);
       case 'auto-rename': {
         const info = await P.getPdfInfo(files[0]);
         const suggested = `${info.author || 'doc'}_${info.title || 'untitled'}.pdf`.replace(/[\\\/:*?"<>|]/g, '_');
         return res.json({ ok: true, suggested, info });
       }
-      case 'show-js': return needEngine(res, action, 'PDF 内嵌脚本解析（需遍历对象流）');
-      case 'scanner-split': return needEngine(res, action, '图像切分引擎（OpenCV 等）');
+      case 'show-js': return engineOrForward(req, res, action, 'PDF 内嵌脚本解析（需遍历对象流）', files, body);
+      case 'scanner-split': return engineOrForward(req, res, action, '图像切分引擎（OpenCV 等）', files, body);
       case 'repair': {
         const buf = await P.loadPdfAny(files[0]).then(d => d.save());
         return sendPdf(res, Buffer.from(buf), 'repaired.pdf');
       }
-      case 'unlock-forms': return needEngine(res, action, 'qpdf / mutool');
+      case 'unlock-forms': return engineOrForward(req, res, action, 'qpdf / mutool', files, body);
 
       /* ---------- PDFPatcher 能力（纯 Node） ---------- */
       case 'inspect-structure': {
@@ -284,9 +305,9 @@ router.post('/:action', upload.any(), async (req, res) => {
       }
 
       /* ---------- 其他 ---------- */
-      case 'ocr': return needEngine(res, action, 'OCRmyPDF + Tesseract');
-      case 'compare': return needEngine(res, action, 'PDF 差异比对引擎');
-      case 'read-annotate': return needEngine(res, action, '前端阅读器直接处理');
+      case 'ocr': return engineOrForward(req, res, action, 'OCRmyPDF + Tesseract', files, body);
+      case 'compare': return engineOrForward(req, res, action, 'PDF 差异比对引擎', files, body);
+      case 'read-annotate': return engineOrForward(req, res, action, '前端阅读器直接处理', files, body);
 
       default:
         return res.status(200).json({ ok: false, message: `PDF 工具「${action}」后端待实现。` });
