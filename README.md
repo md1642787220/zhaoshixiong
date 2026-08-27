@@ -37,8 +37,32 @@
 ## 技术栈
 
 - **前端**：原生 HTML / CSS / JavaScript（ES Module 模块化，hash 路由，无构建依赖）
-- **后端**：Node.js + Express + Multer（文件上传）+ Marked（Markdown 解析）+ pdf-parse（PDF 解析）
+- **后端**：Node.js + Express + Multer（文件上传）+ Marked（Markdown 解析）+ pdf-parse（PDF 解析）+ pdf-lib / fontkit / adm-zip（PDF 处理）
 - **音视频处理**：调用系统 ffmpeg（可选，未安装时功能自动降级并给出提示）
+
+### PDF 后端实现状态（backend/routes/pdf.js + backend/lib/pdf.js）
+
+基于 `pdf-lib` 实现、已可在本环境直接使用的工具（24 个）：
+
+| 分类 | 已实现工具 |
+|------|-----------|
+| 页面操作 | merge、split（zip 打包）、rotate、auto-rotate、extract-pages、reorganize、remove-pages、remove-blanks、crop、page-numbers（支持中文）、page-layout |
+| 内容与编辑 | change-metadata、pdf-info、extract-images（zip）、watermark（支持中文）、add-stamp、add-attachments、remove-annotations、flatten、toc |
+| 安全 | add-password、sanitize |
+| 转换 | image-to-pdf |
+| 高级 | overlay、booklet、adjust-scale、auto-rename（返回建议名）、repair |
+| 其他 | — |
+
+需服务端安装外部引擎方可启用的工具（接口与前端已就绪，安装后自动可用）：
+
+- **LibreOffice / Gotenberg**：convert-office、to-pdf、to-presentation、markdown-to-pdf
+- **Ghostscript / poppler**：to-image、to-pdfa、adjust-contrast、single-large-page、replace-color
+- **qpdf / mutool**：remove-password、change-permissions、remove-cert-sign、unlock-forms
+- **签名库（node-signpdf）**：sign、cert-sign、validate-signature、timestamp、redact
+- **OCRmyPDF + Tesseract**：ocr
+- **差异比对 / 阅读器 / 脚本解析**：compare、read-annotate、show-js、scanner-split、text-editor
+
+> 降级工具返回 `{ ok:false, engine:"..." }` 提示，前端据此告知用户安装对应引擎。
 
 ### 架构说明：前端先行、接口预留
 
