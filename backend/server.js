@@ -28,7 +28,7 @@ app.use('/api/learn', learnRouter);
 app.use('/api/pdf', pdfRouter);
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', service: 'helper-backend', time: new Date().toISOString() });
+  res.json({ status: 'ok', service: 'shixiong-backend', time: new Date().toISOString() });
 });
 
 app.use('/api', (req, res) => res.status(404).json({ message: '接口不存在' }));
@@ -53,7 +53,7 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log('==================================');
-  console.log('  Helper 助手 后端服务已启动');
+  console.log('  shixiong 后端服务已启动');
   console.log(`  站点: http://localhost:${PORT}`);
   console.log(`  API : http://localhost:${PORT}/api/health`);
   console.log('==================================');

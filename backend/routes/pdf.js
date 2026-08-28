@@ -11,7 +11,6 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const P = require('../lib/pdf');
-const Stirling = require('../lib/stirling');
 
 const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'helper-pdf-'));
 const upload = multer({ dest: tmpRoot, limits: { fileSize: 500 * 1024 * 1024 } });
@@ -31,7 +30,7 @@ const PLANNED = [
   'inspect-structure', 'export-xml', 'edit-bookmarks', 'replace-fonts', 'remove-actions',
 ];
 
-/* 需外部引擎（Stirling 转发或降级）的 action；其余为纯 Node（pdf-lib）实现 */
+/* 需外部引擎（降级提示）的 action；其余为纯 Node（pdf-lib）实现 */
 const ENGINE_ACTIONS = new Set([
   'single-large-page', 'text-editor', 'replace-color', 'remove-password',
   'change-permissions', 'sign', 'cert-sign', 'remove-cert-sign',
@@ -50,7 +49,7 @@ function readFiles(req) {
   const g = list.filter(x => x.fieldname === 'file');
   return g.map(x => fs.readFileSync(x.path));
 }
-/* 同 readFiles，但保留原始文件名/mimetype（供 Stirling 识别 Office 等文件类型） */
+/* 同 readFiles，但保留原始文件名/mimetype（供引擎识别 Office 等文件类型） */
 function readFilesWithMeta(req) {
   const list = (req.files || []);
   const f = list.filter(x => x.fieldname === 'files');
@@ -95,24 +94,55 @@ function needEngine(res, action, engine) {
   });
 }
 
-/* 引擎依赖功能：优先转发 Stirling-PDF（若已配置），否则返回降级提示 */
+/* 引擎依赖功能：若配置了 PDF_WORKER_URL，则转发到 Python PDF Worker；
+   否则返回降级提示（前端已就绪、接口预留） */
+const WORKER_URL = process.env.PDF_WORKER_URL || '';
+const WORKER_TIMEOUT = parseInt(process.env.PDF_WORKER_TIMEOUT || '120000', 10);
+
 async function engineOrForward(req, res, action, engine, files, body) {
-  if (Stirling.enabled() && Stirling.isForwardable(action)) {
-    const r = await Stirling.forward(action, readFilesWithMeta(req), body);
-    if (r.ok && r.buffer) {
-      const ext = (r.contentType || '').includes('zip') ? 'zip'
-        : (r.contentType || '').includes('json') ? 'json'
-        : (r.contentType || '').includes('image') ? 'png' : 'pdf';
-      res.setHeader('Content-Type', r.contentType || 'application/octet-stream');
-      res.setHeader('Content-Disposition', `attachment; filename="${(r.filename || action)}.${ext}"`);
-      return res.send(r.buffer);
+  if (!WORKER_URL) return needEngine(res, action, engine);
+  try {
+    // 原样转发 multipart（multer 已落盘的文件 + 原始表单字段）
+    const FormData = require('form-data');
+    const fd = new FormData();
+    const list = (req.files || []);
+    for (const f of list) {
+      fd.append(f.fieldname, fs.createReadStream(f.path), {
+        filename: f.originalname,
+        contentType: f.mimetype,
+      });
     }
-    if (r.ok && r.json) {
-      return res.json({ ok: true, ...r.json });
+    for (const [k, v] of Object.entries(body || {})) {
+      if (v !== undefined && v !== null) fd.append(k, String(v));
     }
-    return res.status(200).json({ ok: false, message: r.message || 'Stirling-PDF 转发失败' });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), WORKER_TIMEOUT);
+    const upstream = await fetch(`${WORKER_URL}/api/pdf/${action}`, {
+      method: 'POST',
+      body: fd,
+      headers: fd.getHeaders(),
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    const ct = upstream.headers.get('content-type') || '';
+    if (ct.includes('application/json')) {
+      const json = await upstream.json();
+      return res.status(upstream.status).json(json);
+    }
+    // 文件流直接透传
+    res.status(upstream.status);
+    const disp = upstream.headers.get('content-disposition');
+    if (disp) res.setHeader('Content-Disposition', disp);
+    res.setHeader('Content-Type', ct);
+    const buf = Buffer.from(await upstream.arrayBuffer());
+    return res.send(buf);
+  } catch (err) {
+    console.error('[pdf] forward to worker failed:', err.message);
+    return res.status(502).json({
+      ok: false,
+      message: `PDF 引擎调用失败（${err.message}）。请确认 pdf-worker 服务已启动。`,
+    });
   }
-  return needEngine(res, action, engine);
 }
 
 /* 能力清单：前端据此给「暂未开放」的功能打角标 */
@@ -121,10 +151,8 @@ router.get('/capabilities', (req, res) => {
   for (const a of PLANNED) {
     if (!ENGINE_ACTIONS.has(a)) {
       capabilities[a] = { available: true, source: 'node' };          // 纯 Node 实现
-    } else if (Stirling.enabled() && Stirling.isForwardable(a)) {
-      capabilities[a] = { available: true, source: 'stirling' };      // Stirling 转发
     } else {
-      capabilities[a] = { available: false, source: 'unavailable' };  // 暂未开放
+      capabilities[a] = { available: false, source: 'unavailable' };  // 暂未开放（需外部引擎）
     }
   }
   res.json({ ok: true, capabilities });

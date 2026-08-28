@@ -1,37 +1,28 @@
 # ============================================================
-# Helper 助手 部署编排
-#   - backend       : Node 后端 + 前端静态托管（对外 3000）
-#   - stirling-pdf  : PDF 引擎（对外 8080，被 backend 转发调用）
+# shixiong 部署编排
+#   - backend      : Node 后端 + 前端静态托管（对外 3000）
+#   - pdf-worker   : Python PDF 处理服务（FastAPI + PyMuPDF 等 6 个开源库，对内 8000）
 # ============================================================
 services:
   backend:
     build: .
-    image: helper-backend:latest
-    container_name: helper-backend
+    image: shixiong-backend:latest
+    container_name: shixiong-backend
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       PORT: "3000"
-      # 通过 docker 内网访问 Stirling-PDF 容器
-      STIRLING_API_URL: "http://stirling-pdf:8080"
-      STIRLING_TIMEOUT: "60000"
+      # 指向 Python PDF Worker 服务（docker 内网）
+      PDF_WORKER_URL: "http://pdf-worker:8000"
+      PDF_WORKER_TIMEOUT: "120000"
 
-  stirling-pdf:
-    image: stirlingtools/stirling-pdf:latest
-    container_name: stirling-pdf
+  pdf-worker:
+    build: ./pdf-worker
+    image: shixiong-pdf-worker:latest
+    container_name: shixiong-pdf-worker
     restart: unless-stopped
-    ports:
-      - "8080:8080"
     environment:
-      SECURITY_ENABLELOGIN: "false"
-      # 覆盖镜像内置过小的 Metaspace 限制（128m），否则 Spring Boot 启动时 Metaspace OOM
-      # 并适当降低堆占比，给 metaspace / LibreOffice 留出内存
-      JAVA_CUSTOM_OPTS: "-XX:MaxMetaspaceSize=384m -XX:MaxRAMPercentage=45"
-    volumes:
-      - ./stirling-data/tessdata:/usr/share/tessdata
-      - ./stirling-data/configs:/configs
-      - ./stirling-data/logs:/logs
-      - ./stirling-data/pipeline:/pipeline
-    # 限制容器内存，避免 OOM 拖垮整机
-    mem_limit: 1.2g
+      PDF_WORKER_PORT: "8000"
+    # 提高内存上限以支持 LibreOffice / 大文件处理
+    mem_limit: 2g

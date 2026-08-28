@@ -1,9 +1,9 @@
-.git
-.gitignore
-**/node_modules
-backend/.env
-**/*.log
-deploy-stirling.sh
-stirling-data
-zhaoshixiong
-README.md
+# 减小 backend 构建 context，避免 opensource/pdf-worker 大目录导致 buildx 会话超时
+opensource/
+pdf-worker/
+.git/
+**/node_modules/
+backend/node_modules/
+frontend/node_modules/
+*.md
+SERVER-DEV.md

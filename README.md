@@ -1,4 +1,4 @@
-# Helper 助手
+# shixiong
 
 一个为**教师、公务员及体制内员工**量身打造的实用工具箱网站，前后端分离架构，帮助日常工作更高效、更规范。
 
@@ -13,7 +13,7 @@
 | 🎬 视频提取 | 按起止时间段裁剪视频片段（会议录像、课程视频快速截取） |
 | 📄 文本提取 | 从 PDF / TXT / MD / CSV / JSON 文件中提取纯文本 |
 
-### PDF 工具（功能对齐开源 Stirling-Tools/stirling-pdf，前端已就绪、接口预留）
+### PDF 工具（前端已就绪、接口预留）
 
 共 **57 个工具**，按官方 6 大分类组织（数据见 `frontend/js/data/pdfTools.js`）：
 
@@ -53,16 +53,21 @@
 | 高级 | overlay、booklet、adjust-scale、auto-rename（返回建议名）、repair |
 | 其他 | — |
 
-需服务端安装外部引擎方可启用的工具（接口与前端已就绪，安装后自动可用）：
+已实现（由 `pdf-worker` Python 服务处理，基于 6 个开源库）：
 
-- **LibreOffice / Gotenberg**：convert-office、to-pdf、to-presentation、markdown-to-pdf
-- **Ghostscript / poppler**：to-image、to-pdfa、adjust-contrast、single-large-page、replace-color
-- **qpdf / mutool**：remove-password、change-permissions、remove-cert-sign、unlock-forms
-- **签名库（node-signpdf）**：sign、cert-sign、validate-signature、timestamp、redact
-- **OCRmyPDF + Tesseract**：ocr
-- **差异比对 / 阅读器 / 脚本解析**：compare、read-annotate、show-js、scanner-split、text-editor
+- **PyMuPDF / pypdf**：merge、split、rotate、auto-rotate、extract-pages、reorganize、remove-pages、remove-blanks、crop、page-numbers、page-layout、single-large-page、add-password、remove-password、change-permissions、watermark、sanitize、to-image、to-pdfa、to-html、image-to-pdf、overlay、booklet、adjust-scale、adjust-contrast、scanner-split、repair、unlock-forms、flatten、add-stamp、extract-images、change-metadata、remove-annotations、toc、text-editor、show-js、inspect-structure、export-xml、edit-bookmarks、replace-fonts、remove-actions、pdf-info
+- **pdf2docx**：convert-office（Word）
+- **pyHanko**：cert-sign、remove-cert-sign、validate-signature、timestamp、add-attachments
+- **pymupdf4llm / PyMuPDF**：markdown-to-pdf
 
-> 降级工具返回 `{ ok:false, engine:"..." }` 提示，前端据此告知用户安装对应引擎。
+需服务端安装额外外部依赖方可启用的工具（未安装时返回友好提示）：
+
+- **LibreOffice**：to-pdf、to-presentation
+- **WeasyPrint / wkhtmltopdf**：html-to-pdf
+- **Tesseract + OCRmyPDF**：ocr
+- **差异比对 / 阅读器**：compare、read-annotate（read-annotate 前端可直接处理）
+
+> 后端在配置了 `PDF_WORKER_URL` 后会把引擎类 PDF 请求转发给 `pdf-worker`；未配置则返回降级提示。
 
 ### 架构说明：前端先行、接口预留
 
@@ -91,7 +96,7 @@ npm start
 ## 项目结构
 
 ```
-helper/
+shixiong/
 ├── frontend/                       # 前端（静态单页应用，模块化）
 │   ├── index.html                  # 页面骨架
 │   ├── css/
@@ -128,9 +133,14 @@ helper/
 │   ├── server.js                   # 服务入口（含静态托管与 CORS）
 │   ├── routes/
 │   │   ├── tools.js                # 工具板块 API（转换/音视频/文本提取）
-│   │   └── learn.js                # 学习板块 API
+│   │   ├── learn.js                # 学习板块 API
+│   │   └── pdf.js                  # PDF 工具 API（引擎类转发至 pdf-worker）
 │   └── data/learn.json             # 学习专区资源数据
-├── zhaoshixiong/                   # 相关资源目录
+├── pdf-worker/                      # PDF 处理 Worker（Python + FastAPI）
+│   ├── main.py                     # FastAPI 入口（/api/pdf/:action）
+│   ├── pyproject.toml              # uv 依赖管理（国内镜像源）
+│   ├── Dockerfile                  # 含 LibreOffice / Tesseract / 中文字体
+│   └── worker/                     # 功能模块（convert/page/security/edit/advanced/other）
 └── README.md
 ```
 
