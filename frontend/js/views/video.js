@@ -46,7 +46,7 @@ async function checkFfmpegBanner(warnEl) {
 }
 
 export default {
-  title: '视频提取 · Helper 助手',
+  title: '视频提取 · 师兄',
   nav: '/tools',
 
   render() {

@@ -6,18 +6,15 @@ import { icon } from '../components/icon.js';
 
 function toolCard(t) {
   return `
-  <div class="card tool-card">
+  <a class="card tool-card" href="#${t.path}">
     <div class="card-icon">${icon(t.icon, 26)}</div>
     <h3>${t.name}</h3>
     <p class="desc">${t.desc}</p>
-    <div class="card-meta">
-      <a class="card-link" href="#${t.path}">立即使用</a>
-    </div>
-  </div>`;
+  </a>`;
 }
 
 export default {
-  title: '工具板块 · Helper 助手',
+  title: '工具板块 · 师兄',
   nav: '/tools',
 
   render() {

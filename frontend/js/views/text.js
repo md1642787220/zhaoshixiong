@@ -30,7 +30,7 @@ function body() {
 }
 
 export default {
-  title: '文本提取 · Helper 助手',
+  title: '文本提取 · 师兄',
   nav: '/tools',
 
   render() {

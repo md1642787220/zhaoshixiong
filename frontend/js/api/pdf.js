@@ -10,7 +10,7 @@
  *
  * 后端实现后前端零改动即可使用。
  * ============================================================ */
-import { API, API_BASE } from '../config.js';
+import { API, API_BASE } from '../core/config.js';
 
 export const pdfApi = {
   /** 能力清单：{ action: { available, source } } */

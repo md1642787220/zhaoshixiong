@@ -44,7 +44,7 @@ export default {
     const body = document.getElementById('category-body');
     try {
       const cat = await learnApi.category(id);
-      document.title = `${cat.name} · Helper 助手`;
+      document.title = `${cat.name} · 师兄`;
       body.innerHTML = `
       <div class="card" style="padding:26px 28px;">
         <div class="category-head">

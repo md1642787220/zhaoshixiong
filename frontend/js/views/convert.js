@@ -32,7 +32,7 @@ function body() {
 }
 
 export default {
-  title: '格式转换 · Helper 助手',
+  title: '格式转换 · 师兄',
   nav: '/tools',
 
   render() {

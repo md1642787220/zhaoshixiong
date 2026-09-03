@@ -1,90 +1,67 @@
 /* ============================================================
  * views/home.js - 首页
- * 布局：上半部分左右分栏（左文案 + 右两大入口卡片），
- *      下半部分平铺工具与学习板块，省去冗余纵向滚动。
+ * 布局：顶部「板块快速导航」(quick-nav) 直达各板块，
+ *      其下平铺工具 / PDF / 学习三大板块卡片，
+ *      底部为「关于」彩蛋区块（含插画）。
  * ============================================================ */
 import { TOOLS } from '../data/tools.js';
 import { PDF_TOOLS } from '../data/pdfTools.js';
 import { learnApi } from '../api/learn.js';
 import { icon } from '../components/icon.js';
 import { pdfToolCard, applyPdfCaps } from './pdf.js';
+import { aboutSection, bindAboutEgg } from '../components/aboutSection.js';
+import { SECTIONS } from '../data/sections.js';
 import { esc } from '../utils.js';
 
 function toolCard(t) {
   return `
-  <div class="card tool-card">
+  <a class="card tool-card" href="#${t.path}">
     <div class="card-icon">${icon(t.icon, 26)}</div>
     <h3>${t.name}</h3>
     <p class="desc">${t.desc}</p>
-    <div class="card-meta">
-      <a class="card-link" href="#${t.path}">立即使用</a>
-    </div>
-  </div>`;
+  </a>`;
 }
 
 function learnCard(c) {
   return `
-  <div class="card learn-card">
+  <a class="card learn-card" href="#/learn/${c.id}">
     <div class="card-icon">${icon(c.icon, 26)}</div>
     <h3>${esc(c.name)}</h3>
     <p class="desc">${esc(c.description)}</p>
     <div class="card-meta">
       <span class="badge">${c.count} 项资源</span>
-      <a class="card-link" href="#/learn/${c.id}">进入专区</a>
-    </div>
-  </div>`;
-}
-
-/** 大入口卡片：直接进入工具或学习板块 */
-function entryCard({ to, title, sub, cta, kpi, kpiLabel, iconName }) {
-  return `
-  <a class="entry-card" href="${to}">
-    <div class="entry-icon">${icon(iconName, 30)}</div>
-    <div class="entry-body">
-      <div class="entry-title">${title}</div>
-      <div class="entry-sub">${sub}</div>
-      <div class="entry-kpi"><b>${kpi}</b><span>${kpiLabel}</span></div>
-      <div class="entry-cta">${cta} →</div>
+      <span class="card-link">进入专区</span>
     </div>
   </a>`;
 }
 
+/** 板块快捷入口卡片（route 用链接，scroll 用按钮以免干扰 hash 路由） */
+function sectionCard(s) {
+  const isRoute = s.action === 'route';
+  const tag = isRoute ? 'a' : 'button';
+  const attrs = isRoute ? `href="#${s.path}"` : `type="button" data-scroll="${s.target}"`;
+
+  return `
+  <${tag} class="qn-item" ${attrs}>
+    <span class="qn-icon">${icon(s.icon, 21)}</span>
+    <span class="qn-body">
+      <span class="qn-title">${s.name}</span>
+      <span class="qn-desc">${s.desc}</span>
+    </span>
+    ${s.badge ? `<span class="qn-badge">${s.badge}</span>` : ''}
+    <span class="qn-arrow">→</span>
+  </${tag}>`;
+}
+
 export default {
-  title: 'Helper 助手 · 体制内办公好帮手',
+  title: '师兄 · 体制内办公好帮手',
   nav: '/',
 
   render() {
     return `
-    <section class="hero hero-split">
-      <div class="hero-left">
-        <h1>让体制内办公<span class="hl">更高效</span></h1>
-        <p>为教师、公务员及体制内员工量身打造的实用工具箱——<br>格式转换、音视频处理、资料查询，一站搞定。</p>
-        <div class="hero-actions">
-          <a class="btn btn-light" href="#/tools">进入工具板块</a>
-          <a class="btn btn-outline" href="#/learn">浏览学习专区</a>
-        </div>
-      </div>
-      <div class="hero-right">
-        ${entryCard({
-          to: '#/tools',
-          title: '工具板块',
-          sub: '格式转换 / 音频提取 / 视频提取 / 文本提取',
-          cta: '立即使用',
-          kpi: TOOLS.length,
-          kpiLabel: '个实用工具',
-          iconName: 'toolbox',
-        })}
-        ${entryCard({
-          to: '#/learn',
-          title: '学习板块',
-          sub: '办公技巧 / 课件模板 / 教育文件 / 公文写作 / 考试提升',
-          cta: '进入学习',
-          kpi: '25+',
-          kpiLabel: '项精选资源',
-          iconName: 'book-open',
-        })}
-      </div>
-    </section>
+    <nav class="quick-nav" aria-label="板块快速导航">
+      ${SECTIONS.map(sectionCard).join('')}
+    </nav>
 
     <section class="section">
       <div class="section-head">
@@ -108,7 +85,9 @@ export default {
         <a class="more" href="#/learn">查看全部 →</a>
       </div>
       <div class="grid-4" id="home-learn"><div class="loadbox">加载中…</div></div>
-    </section>`;
+    </section>
+
+    ${aboutSection()}`;
   },
 
   async mount() {
@@ -116,5 +95,6 @@ export default {
     const list = await learnApi.categories();
     box.innerHTML = list.map(learnCard).join('');
     applyPdfCaps();
+    bindAboutEgg();
   },
 };

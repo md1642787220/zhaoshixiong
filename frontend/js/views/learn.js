@@ -7,19 +7,19 @@ import { esc } from '../utils.js';
 
 function learnCard(c) {
   return `
-  <div class="card learn-card">
+  <a class="card learn-card" href="#/learn/${c.id}">
     <div class="card-icon">${icon(c.icon, 26)}</div>
     <h3>${esc(c.name)}</h3>
     <p class="desc">${esc(c.description)}</p>
     <div class="card-meta">
       <span class="badge">${c.count} 项资源</span>
-      <a class="card-link" href="#/learn/${c.id}">进入专区</a>
+      <span class="card-link">进入专区</span>
     </div>
-  </div>`;
+  </a>`;
 }
 
 export default {
-  title: '学习板块 · Helper 助手',
+  title: '学习板块 · 师兄',
   nav: '/learn',
 
   render() {

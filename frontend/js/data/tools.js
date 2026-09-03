@@ -31,6 +31,13 @@ export const TOOLS = [
     desc: '从 PDF、TXT 等文件中提取纯文本，便于二次编辑。',
     path: '/tools/text',
   },
+  {
+    id: 'music',
+    icon: 'music',
+    name: '音乐素材解析',
+    desc: '输入素材名称即可解析出下载链接，便于课件配音与活动配乐取材。',
+    path: '/tools/music',
+  },
 ];
 
 /** 格式转换支持的类型与下载文件名 */

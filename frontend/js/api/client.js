@@ -1,7 +1,7 @@
 /* ============================================================
  * api/client.js - HTTP 请求封装
  * ============================================================ */
-import { API, API_BASE } from '../config.js';
+import { API, API_BASE } from '../core/config.js';
 
 function url(path) {
   return API + API_BASE + path;

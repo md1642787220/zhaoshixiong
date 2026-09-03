@@ -1,6 +1,7 @@
 /* ============================================================
- * lib/pdf.js - PDF 核心操作封装（基于 pdf-lib）
- * 所有函数接收 Buffer，返回 Buffer 或 { buffer, meta }
+ * infrastructure/pdfEngine.js - PDF 底层操作引擎（基于 pdf-lib）
+ * 职责：提供纯 PDF 处理原语，所有函数接收 Buffer，
+ *       返回 Buffer 或结构化数据；不含任何 HTTP / 业务判断。
  * ============================================================ */
 const fs = require('fs');
 const os = require('os');
@@ -690,7 +691,7 @@ async function pdfToHtml(buf) {
   } catch (e) {
     text = '(无法提取文本：' + (e.message || e) + ')';
   }
-  const esc = (s) => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const esc = (s) => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }));
   const paras = text.split(/\n{2,}/).map(p => p.trim()).filter(Boolean)
     .map(p => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('\n');
   return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>PDF 导出</title>

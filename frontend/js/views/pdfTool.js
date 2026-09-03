@@ -61,7 +61,7 @@ function renderForm(tool) {
 }
 
 export default {
-  title: 'PDF 工具 · Helper 助手',
+  title: 'PDF 工具 · 师兄',
   nav: '/pdf',
 
   render(params) {

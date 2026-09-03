@@ -36,7 +36,7 @@ export async function applyPdfCaps() {
 }
 
 export default {
-  title: 'PDF 工具 · Helper 助手',
+  title: 'PDF 工具 · 师兄',
   nav: '/pdf',
 
   render() {
