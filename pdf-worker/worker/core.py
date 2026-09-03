@@ -34,13 +34,17 @@ def new_tmp() -> Path:
 
 
 def save_uploads(files) -> list:
-    """保存上传文件，返回 [(path, original_name, ext)]。"""
+    """保存上传文件，返回 [(path, original_name, ext)]。
+
+    兼容 starlette / fastapi 的 UploadFile 与内部 dict 两种表示，
+    避免不同 UploadFile 类导致 isinstance 判断失效。
+    """
     saved = []
     for f in files:
-        if isinstance(f, UploadFile):
+        if hasattr(f, "file"):
             data = f.file.read()
             name = f.filename or "file"
-        else:
+        elif isinstance(f, dict):
             data = f.get("buf")
             name = f.get("name", "file")
         suf = Path(name).suffix or ".bin"

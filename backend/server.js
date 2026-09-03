@@ -7,6 +7,7 @@ const { loadConfig } = require('./config');
 const { createLogger } = require('./core/logger');
 const { createContainer } = require('./container');
 const { createApp } = require('./app');
+const { attachPdfWs } = require('./wsProxy');
 
 function bootstrap() {
   const config = loadConfig();
@@ -29,6 +30,9 @@ function bootstrap() {
     logger.info(`  环境: ${config.env}`);
     logger.info('==================================');
   });
+
+  // 挂载 PDF Worker 的 WebSocket 代理（实时进度推送）
+  attachPdfWs(server, { pdfWorkerUrl: config.pdfWorker.url, logger });
 
   /** 优雅关闭 */
   function shutdown(signal) {

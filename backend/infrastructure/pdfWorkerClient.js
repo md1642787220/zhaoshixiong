@@ -24,8 +24,11 @@ function createPdfWorkerClient({ url = '', timeoutMs = 120000, logger }) {
     }
 
     const form = new FormData();
+    // 关键：必须先 readFileSync 把文件读成 Buffer 再 append。
+    // fs.createReadStream 是异步流，form.getBuffer() 同步调用时流还没读完，
+    // 导致序列化出的 multipart body 损坏（worker 报 boundary 解析错误）。
     for (const f of req.files || []) {
-      form.append(f.fieldname, fs.createReadStream(f.path), {
+      form.append(f.fieldname, fs.readFileSync(f.path), {
         filename: f.originalname,
         contentType: f.mimetype,
       });
@@ -37,10 +40,15 @@ function createPdfWorkerClient({ url = '', timeoutMs = 120000, logger }) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
+      // 用 form.getBuffer() 把 multipart 完整序列化为 buffer 再传 fetch，
+      // 保证 boundary 头与 body 内容一致，避免 Node 20 undici fetch 对 stream
+      // 的 boundary 同步问题（python_multipart: Expected boundary character 45, got 91）。
+      const buf = form.getBuffer();
+      const headers = { ...form.getHeaders(), 'content-length': String(buf.length) };
       const upstream = await fetch(`${url}/api/pdf/${action}`, {
         method: 'POST',
-        body: form,
-        headers: form.getHeaders(),
+        body: buf,
+        headers,
         signal: controller.signal,
       });
 

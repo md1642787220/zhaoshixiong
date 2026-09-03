@@ -35,14 +35,47 @@ def ocr(files, params):
 
 @register("compare", desc="文档比较")
 def compare(files, params):
+    """逐页对比两份 PDF 的文本差异。
+
+    返回每页的新增/删除行数与 unified diff，并汇总变更页数。
+    """
     import difflib
     saved = save_uploads(files)
     if len(saved) < 2:
-        raise HTTPException(status_code=400, detail="需上传两份文件")
-    a = fitz.open(str(saved[0][0])).get_page_text(0)
-    b = fitz.open(str(saved[1][0])).get_page_text(0)
-    diff = difflib.unified_diff(a.splitlines(), b.splitlines(), lineterm="")
-    return {"diff": "\n".join(diff)}
+        raise HTTPException(status_code=400, detail="需上传两份文件（原稿 + 修改稿）")
+
+    da = fitz.open(str(saved[0][0]))
+    db = fitz.open(str(saved[1][0]))
+    count_a, count_b = da.page_count, db.page_count
+
+    pages = []
+    total_added = total_removed = 0
+    for i in range(max(count_a, count_b)):
+        ta = da[i].get_text("text") if i < count_a else ""
+        tb = db[i].get_text("text") if i < count_b else ""
+        diff = list(difflib.unified_diff(ta.splitlines(), tb.splitlines(), lineterm="", n=1))
+        added = sum(1 for x in diff if x.startswith("+") and not x.startswith("+++"))
+        removed = sum(1 for x in diff if x.startswith("-") and not x.startswith("---"))
+        total_added += added
+        total_removed += removed
+        pages.append({
+            "page": i + 1,
+            "identical": ta.strip() == tb.strip(),
+            "added": added,
+            "removed": removed,
+            "diff": "\n".join(diff),
+        })
+
+    da.close()
+    db.close()
+    return {
+        "pageCountA": count_a,
+        "pageCountB": count_b,
+        "changedPages": sum(1 for pg in pages if not pg["identical"]),
+        "totalAdded": total_added,
+        "totalRemoved": total_removed,
+        "pages": pages,
+    }
 
 
 @register("read-annotate", desc="阅读与批注（返回页数）")

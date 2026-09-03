@@ -46,6 +46,7 @@ def adjust_scale(files, params):
 
 @register("adjust-contrast", desc="调整对比度")
 def adjust_contrast(files, params):
+    import io
     import PIL.Image as Image
     from PIL import ImageEnhance
     p, _, _ = save_uploads(files)[0]
@@ -54,16 +55,22 @@ def adjust_contrast(files, params):
     gray = params.get("grayscale") in ("true", True)
     doc = fitz.open(str(p))
     out = fitz.open()
-    scale = 1.5
+    scale = 1.5  # 渲染倍率，保证处理后仍有足够清晰度
     for page in doc:
         pm = page.get_pixmap(matrix=fitz.Matrix(scale, scale))
         img = Image.frombytes("RGB", (pm.width, pm.height), pm.samples)
         if gray:
             img = img.convert("L")
-        img = ImageEnhance.Contrast(img).enhance(1 + contrast)
-        img = ImageEnhance.Brightness(img).enhance(1 + brightness)
+        if contrast:
+            img = ImageEnhance.Contrast(img).enhance(1 + contrast)
+        if brightness:
+            img = ImageEnhance.Brightness(img).enhance(1 + brightness)
+        # 关键：PIL 处理完必须编码成 PNG 再交给 PyMuPDF。
+        # 不能把原始像素(img.tobytes())当 stream，也不应再传 pixmap，否则图像无效。
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
         np = out.new_page(width=page.rect.width, height=page.rect.height)
-        np.insert_image(np.rect, stream=img.tobytes(), pixmap=pm)
+        np.insert_image(np.rect, stream=buf.getvalue())
     op = new_tmp() / "contrast.pdf"
     out.save(str(op))
     out.close()

@@ -28,16 +28,21 @@ const PLANNED = [
   'scanner-split', 'repair', 'unlock-forms',
   'ocr', 'compare', 'read-annotate',
   'inspect-structure', 'export-xml', 'edit-bookmarks', 'replace-fonts', 'remove-actions',
+  'render-page',
 ];
 
 /** 需要外部引擎的 action（纯 Node 无法完成） */
 const ENGINE_ACTIONS = new Set([
   'single-large-page', 'text-editor', 'replace-color', 'remove-password',
   'change-permissions', 'sign', 'cert-sign', 'remove-cert-sign',
-  'validate-signature', 'redact', 'timestamp', 'to-image', 'to-pdfa',
-  'convert-office', 'to-pdf', 'html-to-pdf', 'to-presentation',
-  'adjust-contrast', 'show-js', 'scanner-split', 'unlock-forms', 'ocr',
-  'compare', 'read-annotate',
+  'validate-signature', 'redact', 'to-image',
+  'convert-office',
+  // 图片转 PDF 交由 Python worker(PyMuPDF)：需页边距 / 灰度等图像能力，纯 pdf-lib 做不到
+  'image-to-pdf',
+  'adjust-contrast', 'show-js', 'scanner-split', 'unlock-forms',
+  'compare',
+  // PDF 页面渲染为图片：供前端签名位置可视化预览（PyMuPDF）
+  'render-page',
 ]);
 
 /** 各引擎依赖功能所需引擎说明（用于降级提示） */
@@ -52,20 +57,15 @@ const ENGINE_LABELS = {
   'remove-cert-sign': 'qpdf / mutool',
   'validate-signature': '签名校验库',
   redact: '内容遮盖需精确坐标，建议前端标注后由引擎处理',
-  timestamp: 'TSA 时间戳服务',
   'to-image': 'Ghostscript / poppler（PDF 页面渲染为图片）',
-  'to-pdfa': 'Ghostscript（PDF/A 规范化）',
   'convert-office': 'LibreOffice / Gotenberg（Office ⇄ PDF）',
-  'to-pdf': 'LibreOffice / Gotenberg',
-  'html-to-pdf': 'wkhtmltopdf / Gotenberg',
-  'to-presentation': 'LibreOffice',
+  'image-to-pdf': 'PyMuPDF（图片转 PDF，支持页边距 / 灰度）',
   'adjust-contrast': 'Ghostscript（图像滤镜）',
   'show-js': 'PDF 内嵌脚本解析（需遍历对象流）',
   'scanner-split': '图像切分引擎（OpenCV 等）',
   'unlock-forms': 'qpdf / mutool',
-  ocr: 'OCRmyPDF + Tesseract',
   compare: 'PDF 差异比对引擎',
-  'read-annotate': '前端阅读器直接处理',
+  'render-page': 'PyMuPDF（PDF 页面渲染为图片）',
 };
 
 const toBool = (s) => s === '1' || s === true || s === 'true';

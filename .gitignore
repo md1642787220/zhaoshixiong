@@ -7,3 +7,6 @@ stirling_messages.*
 stirling-data/
 .playwright-cli/
 backend/_verify/
+__pycache__/
+*.pyc
+test_pdfs/

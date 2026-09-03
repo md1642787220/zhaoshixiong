@@ -4,7 +4,10 @@
 调用 pypdf / PyMuPDF / pdf2docx / pdfplumber / pymupdf4llm / pyHanko 实现处理。
 """
 import os
-from fastapi import FastAPI, Request
+import json
+import asyncio
+import io
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse, Response
 from starlette.datastructures import UploadFile
 from worker import core
@@ -53,6 +56,78 @@ async def handle(action: str, request: Request):
     if isinstance(result, Response):
         return result
     return {"ok": True, **result}
+
+
+@app.websocket("/ws/api/pdf/{action}")
+async def ws_handle(action: str, ws: WebSocket):
+    await ws.accept()
+    meta = None
+    buf = bytearray()
+    try:
+        while True:
+            frame = await ws.receive()
+            if frame["type"] == "websocket.disconnect":
+                return
+            if frame["type"] != "websocket.receive":
+                continue
+            if frame.get("text") is not None:
+                data = json.loads(frame["text"])
+                if data.get("type") == "meta":
+                    meta = data
+                elif data.get("type") == "end":
+                    break
+            elif frame.get("bytes") is not None:
+                buf.extend(frame["bytes"])
+    except WebSocketDisconnect:
+        return
+
+    if not meta:
+        await ws.send_json({"type": "error", "message": "缺少 meta 信息"})
+        await ws.close()
+        return
+
+    reg = core.REGISTRY.get(action)
+    if not reg:
+        await ws.send_json({"type": "error", "message": f"未知 action: {action}"})
+        await ws.close()
+        return
+
+    try:
+        up = UploadFile(filename=meta.get("filename", "input.pdf"), file=io.BytesIO(bytes(buf)))
+        params = meta.get("params", {}) or {}
+        loop = asyncio.get_running_loop()
+
+        def progress_cb(m):
+            asyncio.run_coroutine_threadsafe(ws.send_json(m), loop)
+
+        # 在線程池执行阻塞的同步转换，避免卡住事件循环；
+        # 进度回调通过 run_coroutine_threadsafe 安全调度到事件循环实时推送
+        if action == "convert-office":
+            result = await loop.run_in_executor(
+                None, lambda: reg["handler"]([up], params, progress=progress_cb)
+            )
+        else:
+            result = await loop.run_in_executor(
+                None, lambda: reg["handler"]([up], params)
+            )
+
+        if isinstance(result, Response):
+            body = result.body
+            await ws.send_json({
+                "type": "done",
+                "filename": "converted.docx",
+                "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            })
+            await ws.send_bytes(body)
+            await ws.send_json({"type": "final"})
+        else:
+            await ws.send_json({"type": "done", "json": result})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        await ws.send_json({"type": "error", "message": str(e)})
+    finally:
+        await ws.close()
 
 
 if __name__ == "__main__":

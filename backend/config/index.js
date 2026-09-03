@@ -29,7 +29,9 @@ function loadConfig(env = process.env) {
 
     server: Object.freeze({
       port: toInt(env.PORT, 3000),
-      host: env.HOST || '0.0.0.0',
+      // '::' 为双栈监听，同时接受 IPv4(127.0.0.1) 与 IPv6(::1)，
+      // 避免浏览器把 localhost 解析到 ::1 时无法连接（WebSocket 不回退 IPv4）。
+      host: env.HOST || '::',
     }),
 
     limits: Object.freeze({
@@ -46,7 +48,7 @@ function loadConfig(env = process.env) {
     /** Python PDF Worker 服务 */
     pdfWorker: Object.freeze({
       url: env.PDF_WORKER_URL || '',
-      timeoutMs: toInt(env.PDF_WORKER_TIMEOUT, 120000),
+      timeoutMs: toInt(env.PDF_WORKER_TIMEOUT, 600000),
     }),
 
     log: Object.freeze({

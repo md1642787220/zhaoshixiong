@@ -27,9 +27,13 @@ function createApp({ config, logger, services, storage }) {
 
   /* ---------- 同端口托管前端静态资源 ---------- */
   if (config.frontend.enabled && fs.existsSync(config.frontend.dir)) {
-    app.use(express.static(config.frontend.dir));
+    // 开发期禁用静态资源缓存，避免修改前端 JS 后浏览器仍加载旧模块
+    app.use(express.static(config.frontend.dir, {
+      setHeaders(res) { res.setHeader('Cache-Control', 'no-store'); },
+    }));
     // 前端使用 hash 路由，未匹配的路径回退到 index.html
     app.get('*', (req, res) => {
+      res.setHeader('Cache-Control', 'no-store');
       res.sendFile(path.join(config.frontend.dir, 'index.html'));
     });
     logger.info(`已托管前端静态资源: ${config.frontend.dir}`);

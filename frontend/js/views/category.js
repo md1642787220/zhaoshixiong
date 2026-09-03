@@ -46,7 +46,7 @@ export default {
       const cat = await learnApi.category(id);
       document.title = `${cat.name} · 师兄`;
       body.innerHTML = `
-      <div class="card" style="padding:26px 28px;">
+      <div class="card category-panel">
         <div class="category-head">
           <div class="card-icon">${icon(cat.icon, 30)}</div>
           <div>

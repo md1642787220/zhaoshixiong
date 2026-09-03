@@ -1,0 +1,16 @@
+# PDF Worker Python 依赖清单
+# 安装时默认走清华大学 TUNA 镜像源（见首行 -i）。
+# 如需阿里云镜像，把首行替换为：
+#   -i https://mirrors.aliyun.com/pypi/simple/
+# 也可在安装命令显式指定： pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+-i https://pypi.tuna.tsinghua.edu.cn/simple
+
+fastapi>=0.110
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9
+pypdf>=4.2
+PyMuPDF>=1.24
+pdf2docx>=0.5.1
+pdfplumber>=0.11
+pymupdf4llm>=0.0.14
+pyHanko>=0.36

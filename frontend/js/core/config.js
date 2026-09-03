@@ -22,3 +22,16 @@ export const MUSIC_USE_MOCK = true;
 
 /** 模拟接口延迟（毫秒），仅占位数据模式下生效，便于体验加载状态 */
 export const MOCK_LATENCY = 400;
+
+/** WebSocket 基础地址（同源部署时自动推导协议与主机） */
+export const WS_BASE = (() => {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  let host = location.host;
+  // 本地开发兼容：浏览器常把 `localhost` 解析为 IPv6 `::1`，但很多后端（尤其 Node
+  // 绑 0.0.0.0）只接受 IPv4，WebSocket 不会自动回退到 IPv4，导致握手失败。
+  // hostname 为 localhost / ::1 时，统一把 WS 主机换成 127.0.0.1（强制走 IPv4）。
+  if (location.hostname === 'localhost' || location.hostname === '::1') {
+    host = '127.0.0.1' + (location.port ? ':' + location.port : '');
+  }
+  return `${proto}//${host}`;
+})();

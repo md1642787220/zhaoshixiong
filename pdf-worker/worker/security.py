@@ -1,5 +1,6 @@
 """安全与签名类：加密/解密/权限/水印/脱敏/签名(pyHanko)。"""
 import fitz  # PyMuPDF
+from pathlib import Path
 from pypdf import PdfReader, PdfWriter
 from pypdf.generic import NameObject
 from .core import register, save_uploads, new_tmp, send_file
@@ -194,12 +195,23 @@ def timestamp(files, params):
 
 @register("sign", desc="手写签名（叠加图片）")
 def sign(files, params):
-    p, _, _ = save_uploads(files)[0]
+    # 签名图片作为附加文件随主 PDF 一起被 save_uploads 落盘了，按扩展名直接找路径，
+    # 避免直接读 UploadFile.file 缓冲（不可靠，可能为空/已被消费）。
+    saved = save_uploads(files)
+    pdf_saved = next((s for s in saved if s[2].lower() == ".pdf"), None)
+    img_saved = next((s for s in saved if s[2].lower() in (".png", ".jpg", ".jpeg")), None)
+    if not pdf_saved:
+        raise HTTPException(status_code=400, detail="请上传 PDF 文件")
+    if not img_saved:
+        raise HTTPException(status_code=400, detail="请上传签名图片（PNG / JPG）")
+
+    p, _, _ = pdf_saved
+    img_path = img_saved[0]
     x = float(params.get("x", 70)) / 100
     y = float(params.get("y", 10)) / 100
     scale = float(params.get("scale", 20)) / 100
     pages = params.get("page", "")
-    img = params.get("signFile") or params.get("file")
+
     doc = fitz.open(str(p))
     targets = _page_range(pages, doc.page_count)
     for i in targets:
@@ -207,7 +219,7 @@ def sign(files, params):
         rect = fitz.Rect(page.rect.width * x, page.rect.height * (1 - y),
                          page.rect.width * x + page.rect.width * scale,
                          page.rect.height * (1 - y) + page.rect.height * scale)
-        page.insert_image(rect, filename=img)
+        page.insert_image(rect, filename=str(img_path))
     out = new_tmp() / "signed.pdf"
     doc.save(str(out))
     doc.close()

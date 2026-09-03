@@ -19,12 +19,12 @@
 }
 .card:active { box-shadow: var(--nm-inset); transform: translateY(0); }
 
-/* 子页面：去掉新拟态与卡片动效，纯静态「细边框 + 浅阴影」 */
+/* 子页面：纯静态，无边框 / 无阴影 / 无动效 */
 .is-subpage .card,
 .is-subpage .card:hover,
 .is-subpage .card:active {
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
+  border: none;
+  box-shadow: none;
   transform: none;
 }
 .grid-4 { display: grid; grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); gap: 18px; }

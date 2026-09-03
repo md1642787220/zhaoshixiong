@@ -32,33 +32,15 @@ export const PDF_TOOLS = [
   /* ===================== 转换 Convert ===================== */
   {
     id: 'pdf-to-office', name: 'PDF 转 Office', cat: 'convert', icon: 'refresh',
-    desc: '将 PDF 转为可编辑的 Word / Excel / PPT', action: 'convert-office', multi: false,
+    desc: '将 PDF 转为可编辑的 Word 文档', action: 'convert-office', multi: false,
     params: [
       { type: 'select', name: 'target', label: '目标格式',
-        options: [['docx', 'Word (.docx)'], ['xlsx', 'Excel (.xlsx)'], ['pptx', 'PowerPoint (.pptx)']] },
-      { type: 'switch', name: 'singlePageSheets', label: 'Excel 每页一个工作表', when: { target: 'xlsx' } },
+        options: [['docx', 'Word (.docx)']] },
       { type: 'switch', name: 'fitImages', label: '自动适配图片尺寸', when: { target: 'docx' } },
     ],
     hint: '转换结果可能需要简单校对，复杂排版建议用“PDF 转图片”再识别。',
   },
-  {
-    id: 'office-to-pdf', name: 'Office 转 PDF', cat: 'convert', icon: 'file',
-    desc: 'Word / Excel / PPT / 文本 转成 PDF', action: 'to-pdf', multi: true,
-    params: [
-      { type: 'select', name: 'engine', label: '转换引擎',
-        options: [['libreoffice', 'LibreOffice（推荐）'], ['gotenberg', 'Gotenberg']] },
-    ],
-    hint: '需服务器安装 LibreOffice 或配置 Gotenberg 服务。',
-  },
-  {
-    id: 'pdf-to-pdfa', name: 'PDF 转 PDF/A', cat: 'convert', icon: 'file-check',
-    desc: '转为长期归档合规的 PDF/A 标准', action: 'to-pdfa', multi: false,
-    params: [
-      { type: 'select', name: 'level', label: '合规等级',
-        options: [['PDF/A-1b', 'PDF/A-1b'], ['PDF/A-2b', 'PDF/A-2b'], ['PDF/A-3b', 'PDF/A-3b']] },
-    ],
-    hint: '用于档案归档、招投标等需要长期可读的场景。',
-  },
+
   {
     id: 'pdf-to-html', name: 'PDF 转 HTML', cat: 'convert', icon: 'globe',
     desc: '将 PDF 页面转为可编辑的 HTML 网页', action: 'to-html', multi: false,
@@ -66,19 +48,12 @@ export const PDF_TOOLS = [
       { type: 'switch', name: 'singlePage', label: '合并为单个 HTML' },
     ],
   },
-  {
-    id: 'html-to-pdf', name: 'HTML 转 PDF', cat: 'convert', icon: 'globe',
-    desc: '把 HTML 文件或网址渲染为 PDF', action: 'html-to-pdf', multi: false,
-    params: [
-      { type: 'select', name: 'source', label: '来源',
-        options: [['file', '上传 HTML 文件'], ['url', '输入网页网址']] },
-      { type: 'text', name: 'url', label: '网页网址', placeholder: 'https://...', when: { source: 'url' } },
-    ],
-    hint: '适用于把通知、公告网页保存为 PDF。',
-  },
+
   {
     id: 'markdown-to-pdf', name: 'Markdown 转 PDF', cat: 'convert', icon: 'file-text',
     desc: '将 Markdown 文档排版本地化为 PDF', action: 'markdown-to-pdf', multi: false,
+    accept: '.md,.markdown,.txt',
+    dzLabel: '拖入 Markdown 文件 / 点击选择',
     params: [
       { type: 'select', name: 'theme', label: '主题样式',
         options: [['default', '默认'], ['academic', '学术'], ['compact', '紧凑']] },
@@ -97,21 +72,15 @@ export const PDF_TOOLS = [
   {
     id: 'image-to-pdf', name: '图片转 PDF', cat: 'convert', icon: 'image',
     desc: '将多张图片合成为一份 PDF', action: 'image-to-pdf', multi: true,
+    accept: '.jpg,.jpeg,.png',
+    dzLabel: '拖入多张图片 / 点击选择（JPG、PNG）',
     params: [
       { type: 'select', name: 'fit', label: '页面适应', options: [['fit', '自动适配页边距'], ['stretch', '拉伸铺满'], ['center', '居中']] },
       { type: 'select', name: 'color', label: '颜色', options: [['color', '彩色'], ['grayscale', '灰度']] },
       { type: 'range', name: 'margin', label: '页边距 (mm)', min: 0, max: 50, step: 5, value: 0 },
     ],
-    hint: '支持 JPG / PNG，按文件名顺序拼合。',
+    hint: '支持 JPG / PNG，按文件名顺序拼合；可设置灰度与页边距。',
   },
-  {
-    id: 'pdf-to-presentation', name: 'PDF 转演示文稿', cat: 'convert', icon: 'presentation',
-    desc: '将 PDF 每页拆成演示文稿幻灯片', action: 'to-presentation', multi: false,
-    params: [
-      { type: 'select', name: 'format', label: '输出格式', options: [['pptx', 'PowerPoint'], ['odp', 'OpenDocument']] },
-    ],
-  },
-
   /* ===================== 页面操作 Page Operations ===================== */
   {
     id: 'merge', name: '合并 PDF', cat: 'page', icon: 'merge',
@@ -253,11 +222,15 @@ export const PDF_TOOLS = [
     desc: '在 PDF 上手写/绘制签名并叠加', action: 'sign', multi: false,
     params: [
       { type: 'select', name: 'mode', label: '签名方式', options: [['draw', '画板手绘'], ['upload', '上传签名图片']] },
+      { type: 'signature-pad', name: 'signaturePad', when: { mode: 'draw' } },
+      { type: 'file', name: 'signFile', label: '签名图片', accept: '.png,.jpg,.jpeg', when: { mode: 'upload' } },
       { type: 'text', name: 'page', label: '所在页（默认末页）', placeholder: '如 1 或 1,3' },
+      { type: 'position-picker', name: 'positionPicker', label: '签名位置（可视化）' },
       { type: 'range', name: 'x', label: '水平位置 (%)', min: 0, max: 90, step: 1, value: 70 },
       { type: 'range', name: 'y', label: '垂直位置 (%)', min: 0, max: 90, step: 1, value: 10 },
       { type: 'range', name: 'scale', label: '大小 (%)', min: 5, max: 50, step: 1, value: 20 },
     ],
+    hint: '先上传 PDF 与签名，再点「加载页面预览」，即可在预览图上直接拖动签名；下方滑块会同步。',
   },
   {
     id: 'cert-sign', name: '证书签名', cat: 'security', icon: 'certificate',
@@ -312,14 +285,6 @@ export const PDF_TOOLS = [
     ],
     hint: '脱敏为不可逆操作，请确认后再下载。',
   },
-  {
-    id: 'timestamp', name: '时间戳签名', cat: 'security', icon: 'bookmark',
-    desc: '为 PDF 添加可信时间戳（TSA）', action: 'timestamp', multi: false,
-    params: [
-      { type: 'text', name: 'tsaUrl', label: 'TSA 服务地址', placeholder: 'https://...' },
-    ],
-  },
-
   /* ===================== 内容与编辑 Content & Editing ===================== */
   {
     id: 'add-attachments', name: '添加附件', cat: 'edit', icon: 'paperclip',
@@ -473,16 +438,7 @@ export const PDF_TOOLS = [
   },
 
   /* ===================== 其他 Other ===================== */
-  {
-    id: 'ocr', name: 'OCR 文字识别', cat: 'other', icon: 'text-recognition',
-    desc: '扫描件识别为可搜索/可复制文字', action: 'ocr', multi: false,
-    params: [
-      { type: 'select', name: 'lang', label: '识别语言', options: [['chi_sim', '中文（简）'], ['eng', '英文'], ['chi_sim+eng', '中英文']] },
-      { type: 'switch', name: 'deskew', label: '自动纠斜' },
-      { type: 'switch', name: 'searchable', label: '保留原图（可搜索层）' },
-    ],
-    hint: '需服务器安装 OCR 引擎（如 OCRmyPDF + Tesseract）。',
-  },
+
   {
     id: 'compare', name: '文档比较', cat: 'other', icon: 'git-compare',
     desc: '逐页对比两份 PDF 的差异', action: 'compare', multi: true,
@@ -491,12 +447,7 @@ export const PDF_TOOLS = [
     ],
     hint: '上传两份文件（原稿 + 修改稿）。',
   },
-  {
-    id: 'read-annotate', name: '阅读与批注', cat: 'other', icon: 'message-square',
-    desc: '在线阅读 PDF 并添加高亮/批注', action: 'read-annotate', multi: false,
-    params: [],
-    hint: '轻量预览与标注，结果可导出。',
-  },
+
 
   /* ===================== PDFPatcher 能力 ===================== */
   {

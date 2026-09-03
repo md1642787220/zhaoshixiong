@@ -46,6 +46,7 @@
 .tool-nav a:hover { background: var(--primary-50); color: var(--primary-700); }
 .tool-nav a.active { background: var(--primary-50); color: var(--primary-700); font-weight: 650; }
 .tool-panel { padding: 28px 30px; }
+.category-panel { padding: 26px 28px; }
 
 /* ============ 学习分类详情 ============ */
 .category-head { display: flex; align-items: flex-start; gap: 18px; margin-bottom: 24px; }
@@ -119,10 +120,33 @@
 
 /* ============ PDF 工具表单 ============ */
 .pdf-panel { max-width: 760px; margin: 0 auto; }
+
+/* 子页面面板：彻底去掉卡片描边感（双类 + important，防止被 .card 或加载顺序覆盖） */
+.pdf-panel.card,
+.tool-panel.card,
+.tool-nav.card,
+.category-panel.card {
+  box-shadow: none !important;
+  border: none;
+  outline: none;
+  transition: none;
+}
+.pdf-panel.card:hover,
+.tool-panel.card:hover,
+.tool-nav.card:hover,
+.category-panel.card:hover { transform: none; box-shadow: none !important; border: none; }
 .field-hint { font-size: 12px; font-weight: 400; color: var(--text-muted); margin-left: 6px; }
 .form-empty { color: var(--text-muted); font-size: 13.5px; margin: 4px 0 12px; }
 .form-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; margin-bottom: 18px; }
-.field-switch { flex-direction: row; align-items: center; gap: 10px; }
+/* 手写签名工具左右两栏：左 = 签名准备（窄），右 = 预览（宽）。
+   隐藏 x/y/scale 滑块（DOM 保留供 setRange 写入并随表单提交），让用户直接拖预览上的签名 + 角点/滚轮调大小。 */
+.form-fields.sign-layout { grid-template-columns: minmax(280px, 1fr) minmax(0, 1.8fr); gap: 18px 24px; }
+.form-fields.sign-layout .field[data-param="x"],
+.form-fields.sign-layout .field[data-param="y"],
+.form-fields.sign-layout .field[data-param="scale"] { display: none; }
+.sign-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+/* 与 select 等字段保持一致：label 在上、控件在下，间距沿用 .field > label 的 7px（gap 需为 0，否则会叠加成 15px） */
+.field-switch { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
 .field-label { font-size: 13px; font-weight: 600; color: var(--text); }
 .field-label-inline { font-size: 14px; color: var(--text); cursor: pointer; }
 .input-color { padding: 4px; height: 40px; }
@@ -197,15 +221,19 @@
 .file-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
 .file-size { color: var(--text-muted); flex-shrink: 0; font-size: 12.5px; }
 
-/* 接口说明条 */
-.api-note {
-  margin-top: 20px; padding: 11px 15px; border-radius: var(--radius);
-  background: var(--surface-soft); border: 1px solid var(--border);
-  font-size: 12.5px; color: var(--text-muted); line-height: 1.7;
+/* ============ 转换进度条（WebSocket 实时进度） ============ */
+.progress { margin: 14px 0 4px; }
+.progress-bar {
+  height: 8px; background: var(--border); border-radius: var(--radius-full);
+  overflow: hidden;
 }
-.api-note code {
-  background: var(--primary-50); padding: 1px 6px; border-radius: 5px;
-  color: var(--primary-700); font-size: 12px;
+.progress-bar > span {
+  display: block; height: 100%; width: 0;
+  background: linear-gradient(90deg, var(--primary-400), var(--primary));
+  transition: width .25s ease;
+}
+.progress-tip {
+  margin-top: 6px; font-size: 13px; color: var(--text-secondary);
 }
 
 /* ============ 音乐素材解析 ============ */
@@ -359,7 +387,7 @@ body.shake { animation: bodyShake .45s ease; }
   .tool-nav a { white-space: nowrap; }
 }
 @media (max-width: 640px) {
-  .form-fields { grid-template-columns: 1fr; }
+  .form-fields, .form-fields.sign-layout { grid-template-columns: 1fr; }
   .tool-panel { padding: 20px 18px; }
   .music-input-row { flex-wrap: wrap; }
   .music-input { flex: 1 1 100%; }
