@@ -55,7 +55,7 @@
 
 已实现（由 `pdf-worker` Python 服务处理，基于 6 个开源库）：
 
-- **PyMuPDF / pypdf**：merge、split、rotate、auto-rotate、extract-pages、reorganize、remove-pages、remove-blanks、crop、page-numbers、page-layout、single-large-page、add-password、remove-password、change-permissions、watermark、sanitize、to-image、to-pdfa、to-html、image-to-pdf、overlay、booklet、adjust-scale、adjust-contrast、scanner-split、repair、unlock-forms、flatten、add-stamp、extract-images、change-metadata、remove-annotations、toc、text-editor、show-js、inspect-structure、export-xml、edit-bookmarks、replace-fonts、remove-actions、pdf-info
+- **PyMuPDF / pypdf**：merge、split、rotate、auto-rotate、extract-pages、reorganize、remove-pages、remove-blanks、crop、page-numbers、page-layout、single-large-page、add-password、remove-password、change-permissions、watermark、sanitize、to-image、to-pdfa、image-to-pdf、overlay、booklet、adjust-scale、adjust-contrast、scanner-split、repair、unlock-forms、flatten、add-stamp、extract-images、change-metadata、remove-annotations、toc、text-editor、show-js、inspect-structure、export-xml、edit-bookmarks、replace-fonts、remove-actions、pdf-info
 - **pdf2docx**：convert-office（Word）
 - **pyHanko**：cert-sign、remove-cert-sign、validate-signature、timestamp、add-attachments
 - **pymupdf4llm / PyMuPDF**：markdown-to-pdf

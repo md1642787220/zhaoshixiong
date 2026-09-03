@@ -31,7 +31,7 @@ export const PDF_CATEGORIES = [
 export const PDF_TOOLS = [
   /* ===================== 转换 Convert ===================== */
   {
-    id: 'pdf-to-office', name: 'PDF 转 Office', cat: 'convert', icon: 'refresh',
+    id: 'pdf-to-office', name: 'PDF 转 Word 文档', cat: 'convert', icon: 'refresh',
     desc: '将 PDF 转为可编辑的 Word 文档', action: 'convert-office', multi: false,
     params: [
       { type: 'select', name: 'target', label: '目标格式',
@@ -41,13 +41,7 @@ export const PDF_TOOLS = [
     hint: '转换结果可能需要简单校对，复杂排版建议用“PDF 转图片”再识别。',
   },
 
-  {
-    id: 'pdf-to-html', name: 'PDF 转 HTML', cat: 'convert', icon: 'globe',
-    desc: '将 PDF 页面转为可编辑的 HTML 网页', action: 'to-html', multi: false,
-    params: [
-      { type: 'switch', name: 'singlePage', label: '合并为单个 HTML' },
-    ],
-  },
+
 
   {
     id: 'markdown-to-pdf', name: 'Markdown 转 PDF', cat: 'convert', icon: 'file-text',

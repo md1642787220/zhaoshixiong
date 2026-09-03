@@ -23,6 +23,9 @@ import { WS_BASE } from '../core/config.js';
  */
 export function processPdfWs(action, file, params, onProgress) {
   return new Promise((resolve, reject) => {
+    let settled = false;
+    const resolveOnce = (v) => { if (!settled) { settled = true; resolve(v); } };
+    const rejectOnce = (e) => { if (!settled) { settled = true; reject(e); } };
     const ws = new WebSocket(`${WS_BASE}/ws/pdf?action=${encodeURIComponent(action)}`);
     const docxParts = [];
     let expectingFile = false;
@@ -35,7 +38,7 @@ export function processPdfWs(action, file, params, onProgress) {
           ws.send(buf);
           ws.send(JSON.stringify({ type: 'end' }));
         })
-        .catch((e) => reject(e));
+        .catch((e) => rejectOnce(e));
     };
 
     ws.onmessage = (ev) => {
@@ -51,20 +54,21 @@ export function processPdfWs(action, file, params, onProgress) {
           const blob = new Blob(docxParts, {
             type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
           });
-          resolve({ blob, filename });
+          resolveOnce({ blob, filename });
           try { ws.close(); } catch {}
         } else if (msg.type === 'error') {
-          reject(new Error(msg.message || '转换失败'));
+          rejectOnce(new Error(msg.message || '转换失败'));
         }
       } else if (expectingFile) {
         docxParts.push(ev.data);
       }
     };
 
-    ws.onerror = () => reject(new Error('WebSocket 连接失败，请确认后端已启动'));
+    ws.onerror = () => rejectOnce(new Error('WebSocket 连接失败，请确认后端已启动'));
     ws.onclose = () => {
-      if (!expectingFile && docxParts.length === 0) {
-        // 未进入文件接收阶段即关闭（已被 error/reject 处理的情况忽略）
+      // 未进入文件接收阶段、且尚未完成即关闭（如文件过大被服务端断开）→ 明确报错，避免界面永久卡住
+      if (!settled && !expectingFile && docxParts.length === 0) {
+        rejectOnce(new Error('连接已关闭，转换未完成（可能文件过大导致服务端断开）'));
       }
     };
   });

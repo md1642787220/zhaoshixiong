@@ -681,24 +681,6 @@ async function markdownToPdf(mdText, { title = 'Document' } = {}) {
   return Buffer.from(await out.save());
 }
 
-/* ---------- PDF → HTML（纯 Node，基于 pdf-parse 提取文本） ---------- */
-async function pdfToHtml(buf) {
-  const pdfParse = require('pdf-parse');
-  let text = '';
-  try {
-    const data = await pdfParse(buf);
-    text = data.text || '';
-  } catch (e) {
-    text = '(无法提取文本：' + (e.message || e) + ')';
-  }
-  const esc = (s) => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }));
-  const paras = text.split(/\n{2,}/).map(p => p.trim()).filter(Boolean)
-    .map(p => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('\n');
-  return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>PDF 导出</title>
-<style>body{font-family:sans-serif;max-width:760px;margin:2rem auto;line-height:1.8;padding:0 1rem}
-p{margin:0 0 1em}</style></head><body>${paras || '<p>（无文本内容）</p>'}</body></html>`;
-}
-
 /* ---------- 辅助 ---------- */
 function parsePageList(str, count) {
   const res = new Set();
@@ -729,6 +711,6 @@ module.exports = {
   changeMetadata, getPdfInfo, extractImages, watermark, addStamp, addAttachments,
   removeAnnotations, flattenPdf, addToc, addPassword, sanitize,
   imageToPdf, overlay, booklet, adjustScale, parsePageList,
-  markdownToPdf, pdfToHtml,
+  markdownToPdf,
   inspectStructure, exportXml, editBookmarks, replaceFonts, removeActions,
 };

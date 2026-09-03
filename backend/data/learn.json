@@ -6,11 +6,280 @@
       "icon": "bar-chart",
       "description": "Word、Excel、PPT 与 WPS 的实用技巧、函数速查与排版规范，让办公软件真正为你所用。",
       "resources": [
-        { "id": "o1", "title": "Excel 常用函数速查手册", "type": "文档", "format": "PDF", "size": "2.4 MB", "summary": "涵盖 VLOOKUP、XLOOKUP、SUMIF、INDEX+MATCH 等高频函数的语法、场景与实例。" },
-        { "id": "o2", "title": "Word 公文式排版规范与样式模板", "type": "模板", "format": "DOCX", "size": "1.1 MB", "summary": "字体字号、页边距、标题层级一键套用，输出符合公文排版习惯的文档。" },
-        { "id": "o3", "title": "WPS 与 Office 兼容性避坑指南", "type": "文档", "format": "PDF", "size": "1.8 MB", "summary": "常见格式错乱、公式失效、字体丢失等问题的预防与修复方法。" },
-        { "id": "o4", "title": "PPT 汇报课件美化技巧", "type": "课件", "format": "PPTX", "size": "5.2 MB", "summary": "统一字体、母版设计、图表美化与汇报逻辑的实用操作合集。" },
-        { "id": "o5", "title": "Excel 数据透视表从入门到精通", "type": "文档", "format": "PDF", "size": "3.6 MB", "summary": "三步完成数据汇总与交叉分析，告别手工统计报表。" }
+        {
+          "id": "o1",
+          "title": "Excel 常用函数速查手册",
+          "type": "文档",
+          "format": "PDF",
+          "size": "2.4 MB",
+          "summary": "涵盖 VLOOKUP、XLOOKUP、SUMIF、INDEX+MATCH 等高频函数的语法、场景与实例。"
+        },
+        {
+          "id": "o2",
+          "title": "Word 公文式排版规范与样式模板",
+          "type": "模板",
+          "format": "DOCX",
+          "size": "1.1 MB",
+          "summary": "字体字号、页边距、标题层级一键套用，输出符合公文排版习惯的文档。"
+        },
+        {
+          "id": "o3",
+          "title": "WPS 与 Office 兼容性避坑指南",
+          "type": "文档",
+          "format": "PDF",
+          "size": "1.8 MB",
+          "summary": "常见格式错乱、公式失效、字体丢失等问题的预防与修复方法。"
+        },
+        {
+          "id": "o4",
+          "title": "PPT 汇报课件美化技巧",
+          "type": "课件",
+          "format": "PPTX",
+          "size": "5.2 MB",
+          "summary": "统一字体、母版设计、图表美化与汇报逻辑的实用操作合集。"
+        },
+        {
+          "id": "o5",
+          "title": "Excel 数据透视表从入门到精通",
+          "type": "文档",
+          "format": "PDF",
+          "size": "3.6 MB",
+          "summary": "三步完成数据汇总与交叉分析，告别手工统计报表。"
+        },
+        {
+          "id": "o6",
+          "title": "How to move files within the WPs Office client",
+          "type": "技巧",
+          "format": "文章",
+          "size": "—",
+          "summary": "1. Click WPS Office in the upper left corner to enter the home page → Click Global Setting",
+          "source": "WPS 官方帮助中心",
+          "url": "https://help.wps.com/articles/how-to-move-files-within-the-wps-office-client"
+        },
+        {
+          "id": "o7",
+          "title": "The Shortcuts of WPS Office for Mac",
+          "type": "技巧",
+          "format": "文章",
+          "size": "—",
+          "summary": "You can quickly complete tasks with the following shortcuts. Note: Due to the fact that th",
+          "source": "WPS 官方帮助中心",
+          "url": "https://help.wps.com/articles/the-shortcuts-of-wps-office-for-mac"
+        },
+        {
+          "id": "o8",
+          "title": "WPS crash due to insufficient system memory",
+          "type": "技巧",
+          "format": "文章",
+          "size": "—",
+          "summary": "Memory resources are being excessively consumed: too many background programs (e.g., brows",
+          "source": "WPS 官方帮助中心",
+          "url": "https://help.wps.com/articles/wps-crash-due-to-insufficient-system-memory"
+        },
+        {
+          "id": "o9",
+          "title": "How to Resolve WPS Crashes after Upgrading the Mac System to OS26/15.7/14.8?",
+          "type": "技巧",
+          "format": "文章",
+          "size": "—",
+          "summary": "How to Resolve WPS Crashes after Upgrading the Mac System to OS26/15.7/14.8? Our latest ve",
+          "source": "WPS 官方帮助中心",
+          "url": "https://help.wps.com/articles/how-to-resolve-wps-crashes-after-upgrading-the-mac-system"
+        },
+        {
+          "id": "o10",
+          "title": "What to do if the login fails",
+          "type": "技巧",
+          "format": "文章",
+          "size": "—",
+          "summary": "1. Resource loading fails because the network operator is not supported. You can try chang",
+          "source": "WPS 官方帮助中心",
+          "url": "https://help.wps.com/articles/what-to-do-if-the-login-fails"
+        },
+        {
+          "id": "o11",
+          "title": "How to delete or log out my account",
+          "type": "技巧",
+          "format": "文章",
+          "size": "—",
+          "summary": "1. Log in to the Account Management Center of WPS Office (https://account.wps.com/) with t",
+          "source": "WPS 官方帮助中心",
+          "url": "https://help.wps.com/articles/how-to-delete-or-log-out-my-account"
+        },
+        {
+          "id": "o12",
+          "title": "What are the solutions to the WPS template problem?",
+          "type": "技巧",
+          "format": "文章",
+          "size": "—",
+          "summary": "What are the solutions to the WPS template problem? WPS Office is dedicated to updating it",
+          "source": "WPS 官方帮助中心",
+          "url": "https://help.wps.com/articles/what-are-the-solutions-to-the-wps-template-problem"
+        },
+        {
+          "id": "o13",
+          "title": "How to use the Read Aloud feature",
+          "type": "技巧",
+          "format": "文章",
+          "size": "—",
+          "summary": "The Read Aloud feature is available only to the Writer component. Stay tuned for future up",
+          "source": "WPS 官方帮助中心",
+          "url": "https://help.wps.com/articles/how-to-use-the-read-aloud-feature"
+        },
+        {
+          "id": "o14",
+          "title": "How to use the translation feature",
+          "type": "技巧",
+          "format": "文章",
+          "size": "—",
+          "summary": "Open WPS Office on your Android device. Tap Discover, and then tap Al Translate on the Dis",
+          "source": "WPS 官方帮助中心",
+          "url": "https://help.wps.com/articles/how-to-use-the-translation-feature"
+        },
+        {
+          "id": "o15",
+          "title": "What to do if the PDF conversion fails",
+          "type": "技巧",
+          "format": "文章",
+          "size": "—",
+          "summary": "If the PDF conversion fails, perform the following steps to try to solve the problem: 1. I",
+          "source": "WPS 官方帮助中心",
+          "url": "https://help.wps.com/articles/what-to-do-if-the-pdf-conversion-fails"
+        },
+        {
+          "id": "o16",
+          "title": "深度横评：2026 年，AI 生成 PPT 到底进化到什么程度了？",
+          "type": "技巧",
+          "format": "文章",
+          "size": "—",
+          "summary": "我测了 8 款 AI PPT 工具，只有 2 款真正能用。",
+          "source": "少数派 · Office 专题",
+          "url": "https://sspai.com/post/105484"
+        },
+        {
+          "id": "o17",
+          "title": "新版Obsidian与Excel动作，用Quicker摘录（Office方案二）",
+          "type": "技巧",
+          "format": "文章",
+          "size": "—",
+          "summary": "起因终于到了最后一个系列，也就是Obsidian与Office的方案二，本期讲最后一个Excel。回想去年3月份的时候，我偶然间在B站，刷到了大佬一鸣惊人_001，发布的摘录视频、",
+          "source": "少数派 · Office 专题",
+          "url": "https://sspai.com/post/96710"
+        },
+        {
+          "id": "o18",
+          "title": "让我们专注于内容：Markdown 制作幻灯片的三种方案对比",
+          "type": "技巧",
+          "format": "文章",
+          "size": "—",
+          "summary": "和用 Markdown 写文章一样，使用 Markdown 排版幻灯片最大的好处就是可以将注意力集中到内容上，而非排版上。这反映了我一开始的愿望：节省精力。",
+          "source": "少数派 · Office 专题",
+          "url": "https://sspai.com/post/97131"
+        },
+        {
+          "id": "o19",
+          "title": "新版Obsidian与Word动作，用Quicker摘录（Office方案二）",
+          "type": "技巧",
+          "format": "文章",
+          "size": "—",
+          "summary": "起因终于到了最后一个系列，也就是Obsidian与Office的方案二，本期讲Word。回想去年3月份的时候，我偶然间在B站，刷到了大佬一鸣惊人_001，发布的摘录视频、PDF、P",
+          "source": "少数派 · Office 专题",
+          "url": "https://sspai.com/post/96709"
+        },
+        {
+          "id": "o20",
+          "title": "新版Obsidian与Office动作，用Quicker摘录（方案一）",
+          "type": "技巧",
+          "format": "文章",
+          "size": "—",
+          "summary": "起因去年，我做了关于Obsidian与Office：用Quicker摘录图片，并带上跳转链接的视频，其中讲到了用Quicker软件，截取Word、Excel、PowerPoint中",
+          "source": "少数派 · Office 专题",
+          "url": "https://sspai.com/post/96699"
+        },
+        {
+          "id": "o21",
+          "title": "新版Obsidian与PowerPoint动作，用Quicker摘录（方案二）",
+          "type": "技巧",
+          "format": "文章",
+          "size": "—",
+          "summary": "起因终于到了最后一个系列，也就是Obsidian与Office的方案二，本期先讲PowerPoint。回想去年3月份的时候，我偶然间在B站，刷到了大佬一鸣惊人_001，发布的摘录视",
+          "source": "少数派 · Office 专题",
+          "url": "https://sspai.com/post/96708"
+        },
+        {
+          "id": "o22",
+          "title": "word如何进行版本管理？",
+          "type": "技巧",
+          "format": "文章",
+          "size": "—",
+          "summary": "word如何进行版本管理？提到版本管理，网上首先提到的就是git。git非常适合对代码和纯文本的内容进行管理，但是word怎么办？这个问题呢，在2022年解决的。昨天刚刚处理这个事",
+          "source": "少数派 · Office 专题",
+          "url": "https://sspai.com/post/95169"
+        },
+        {
+          "id": "o23",
+          "title": "App+1 | 如何用 AI 辅助快速生成概念示意图",
+          "type": "技巧",
+          "format": "文章",
+          "size": "—",
+          "summary": "Matrix首页推荐Matrix是少数派的写作社区，我们主张分享真实的产品体验，有实用价值的经验与思考。我们会不定期挑选Matrix最优质的文章，展示来自用户的最真实的体验和观点。",
+          "source": "少数派 · Office 专题",
+          "url": "https://sspai.com/post/92113"
+        },
+        {
+          "id": "o24",
+          "title": "OneNote for Windows 10 无法登录",
+          "type": "技巧",
+          "format": "文章",
+          "size": "—",
+          "summary": "我的系统环境是：Windows11故障现象如下图，一直卡在此界面打开ie浏览器，进入右上角的设置图标，选择internet选项，高级，使用TLS1.2勾上，可以解决这一问题。*注意",
+          "source": "少数派 · Office 专题",
+          "url": "https://sspai.com/post/91000"
+        },
+        {
+          "id": "o25",
+          "title": "另一种实现Word、Excel、PPT跳转回链的思路",
+          "type": "技巧",
+          "format": "文章",
+          "size": "—",
+          "summary": "灵感来源之前我写的文章中有两篇是关于PowerPoint、Xmind的回链跳转动作，其中用到了大佬一鸣惊人_001的处理自定义回链协议的工具：摘录视频、PDF、PPT到Obsidi",
+          "source": "少数派 · Office 专题",
+          "url": "https://sspai.com/post/88567"
+        },
+        {
+          "id": "umtll8fquq21",
+          "title": "WPS 表格 30 秒冻结首行",
+          "type": "经验",
+          "format": "帖子",
+          "size": "—",
+          "author": "搬砖小师妹",
+          "contributedAt": "2026-09-03T13:55:53.142Z",
+          "content": "选中第一行，点击「视图」-「冻结窗格」-「冻结首行」，滚动时标题行就会固定显示，再也不用反复上翻了。",
+          "summary": "快速冻结 WPS 表格首行的小技巧"
+        },
+        {
+          "id": "umtll8fqzykb",
+          "title": "Microsoft Word 官方快捷键大全",
+          "type": "转载",
+          "format": "文章",
+          "size": "—",
+          "author": "搬运工",
+          "contributedAt": "2026-09-03T13:55:53.147Z",
+          "url": "https://support.microsoft.com/zh-cn/word-shortcuts",
+          "source": "微软官方支持",
+          "summary": "微软官方整理的 Word 快捷键汇总表"
+        },
+        {
+          "id": "umtll8fr7ujz",
+          "title": "年终总结 PPT 封面模板",
+          "type": "资源",
+          "format": "JSON",
+          "size": "671 B",
+          "author": "设计狮",
+          "contributedAt": "2026-09-03T13:55:53.155Z",
+          "summary": "一套简洁大气的年终总结封面，可直接套用",
+          "file": "mtll8fr7-ryjh9t.json"
+        }
       ]
     },
     {
@@ -19,11 +288,79 @@
       "icon": "layout",
       "description": "中小学课件、班会、说课与公开课模板，拿来即用，稍作修改即可上场。",
       "resources": [
-        { "id": "c1", "title": "中小学通用课件模板（简约风）", "type": "模板", "format": "PPTX", "size": "6.8 MB", "summary": "16:9 版式，含封面、目录、过渡页与内容页，配色清爽不花哨。" },
-        { "id": "c2", "title": "主题班会课件模板合集", "type": "模板", "format": "PPTX", "size": "12.5 MB", "summary": "安全教育、心理健康、开学第一课等 12 个常用主题。" },
-        { "id": "c3", "title": "说课比赛课件模板", "type": "模板", "format": "PPTX", "size": "4.9 MB", "summary": "按说课流程搭建框架：教材分析、学情分析、教法学法、教学过程、板书设计。" },
-        { "id": "c4", "title": "公开课互动课件模板", "type": "课件", "format": "PPTX", "size": "8.3 MB", "summary": "内置课堂活动页、提问环节与小组讨论版式，活跃课堂气氛。" },
-        { "id": "c5", "title": "微课录制课件模板", "type": "模板", "format": "PPTX", "size": "3.2 MB", "summary": "适配主流录屏软件的版式与配色建议，录制效果更清晰。" }
+        {
+          "id": "c1",
+          "title": "中小学通用课件模板（简约风）",
+          "type": "模板",
+          "format": "PPTX",
+          "size": "6.8 MB",
+          "summary": "16:9 版式，含封面、目录、过渡页与内容页，配色清爽不花哨。"
+        },
+        {
+          "id": "c2",
+          "title": "主题班会课件模板合集",
+          "type": "模板",
+          "format": "PPTX",
+          "size": "12.5 MB",
+          "summary": "安全教育、心理健康、开学第一课等 12 个常用主题。"
+        },
+        {
+          "id": "c3",
+          "title": "说课比赛课件模板",
+          "type": "模板",
+          "format": "PPTX",
+          "size": "4.9 MB",
+          "summary": "按说课流程搭建框架：教材分析、学情分析、教法学法、教学过程、板书设计。"
+        },
+        {
+          "id": "c4",
+          "title": "公开课互动课件模板",
+          "type": "课件",
+          "format": "PPTX",
+          "size": "8.3 MB",
+          "summary": "内置课堂活动页、提问环节与小组讨论版式，活跃课堂气氛。"
+        },
+        {
+          "id": "c5",
+          "title": "微课录制课件模板",
+          "type": "模板",
+          "format": "PPTX",
+          "size": "3.2 MB",
+          "summary": "适配主流录屏软件的版式与配色建议，录制效果更清晰。"
+        },
+        {
+          "id": "crawl_10aa8ddf6b",
+          "title": "中小学高中教案,教学设计,教学教案模板资源下载 - 教习网",
+          "type": "网页",
+          "format": "网页",
+          "size": "—",
+          "summary": "教习网 - 教育资源网站领跑者 课件 教案 练习 班会 中考 高考",
+          "source": "www.51jiaoxi.com",
+          "url": "https://www.51jiaoxi.com/jiaoan/",
+          "crawledAt": "2026-09-03T23:49:13.490033"
+        },
+        {
+          "id": "crawl_9814467eb3",
+          "title": "教习网-PPT课件,教案,试题试卷-精选教学资源下载网",
+          "type": "网页",
+          "format": "网页",
+          "size": "—",
+          "summary": "教习网 - 精品教学资源一键下载 总资源： 20,474,310 套 24小时新增： 14,051 套 合作教师招募 免费领取教师福利 帮助中心 登录 注册 我的下载 我的浏览 备课中心",
+          "source": "www.51jiaoxi.com",
+          "url": "https://www.51jiaoxi.com/",
+          "crawledAt": "2026-09-03T23:49:13.490033"
+        },
+        {
+          "id": "crawl_a6a594460d",
+          "title": "中小学高中PPT课件,课件模板,成套备课资源下载 - 教习网",
+          "type": "网页",
+          "format": "网页",
+          "size": "—",
+          "summary": "教习网 - 教育资源网站领跑者 课件 教案 练习 班会 中考 高考",
+          "source": "www.51jiaoxi.com",
+          "url": "https://www.51jiaoxi.com/kejian/",
+          "crawledAt": "2026-09-03T23:49:13.490033"
+        }
       ]
     },
     {
@@ -32,11 +369,58 @@
       "icon": "book-open",
       "description": "课程标准、政策文件、评审材料等教育系统常用文件汇编与解读。",
       "resources": [
-        { "id": "e1", "title": "义务教育课程方案与课程标准（2022 年版）要点解读", "type": "文档", "format": "PDF", "size": "4.5 MB", "summary": "逐科梳理新课标变化点与教学落地建议。" },
-        { "id": "e2", "title": "中小学教师职称评审材料清单与模板", "type": "文档", "format": "DOCX", "size": "0.9 MB", "summary": "申报表、业绩佐证、论文要求一表看清，附材料整理顺序。" },
-        { "id": "e3", "title": "学校安全管理文件汇编目录", "type": "文档", "format": "PDF", "size": "1.6 MB", "summary": "校舍、消防、饮食、活动安全等制度文件目录与责任清单。" },
-        { "id": "e4", "title": "教育系统公文行文规范速查", "type": "文档", "format": "PDF", "size": "1.2 MB", "summary": "行文规则、文种选用、格式要素的快速查阅卡片。" },
-        { "id": "e5", "title": "学生综合素质评价操作指引", "type": "文档", "format": "PDF", "size": "2.1 MB", "summary": "评价指标、记录方式与期末汇总填报流程说明。" }
+        {
+          "id": "e1",
+          "title": "义务教育课程方案与课程标准（2022 年版）要点解读",
+          "type": "文档",
+          "format": "PDF",
+          "size": "4.5 MB",
+          "summary": "逐科梳理新课标变化点与教学落地建议。"
+        },
+        {
+          "id": "e2",
+          "title": "中小学教师职称评审材料清单与模板",
+          "type": "文档",
+          "format": "DOCX",
+          "size": "0.9 MB",
+          "summary": "申报表、业绩佐证、论文要求一表看清，附材料整理顺序。"
+        },
+        {
+          "id": "e3",
+          "title": "学校安全管理文件汇编目录",
+          "type": "文档",
+          "format": "PDF",
+          "size": "1.6 MB",
+          "summary": "校舍、消防、饮食、活动安全等制度文件目录与责任清单。"
+        },
+        {
+          "id": "e4",
+          "title": "教育系统公文行文规范速查",
+          "type": "文档",
+          "format": "PDF",
+          "size": "1.2 MB",
+          "summary": "行文规则、文种选用、格式要素的快速查阅卡片。"
+        },
+        {
+          "id": "e5",
+          "title": "学生综合素质评价操作指引",
+          "type": "文档",
+          "format": "PDF",
+          "size": "2.1 MB",
+          "summary": "评价指标、记录方式与期末汇总填报流程说明。"
+        },
+        {
+          "id": "umtlpcjg6uzq",
+          "title": "动态规划",
+          "type": "转载",
+          "format": "文章",
+          "size": "—",
+          "author": "匿名师兄",
+          "contributedAt": "2026-09-03T15:51:03.030Z",
+          "url": "https://programmercarl.com/algo/dynamic-programming/0062-unique-paths.html#%E6%80%9D%E8%B7%AF",
+          "source": "卡码网",
+          "summary": "转载自 卡码网"
+        }
       ]
     },
     {
@@ -45,11 +429,46 @@
       "icon": "pen-tool",
       "description": "法定公文与事务文书的格式规范、写作要点与常用表述，写材料不再抓瞎。",
       "resources": [
-        { "id": "w1", "title": "党政机关公文格式（GB/T 9704）图解速查", "type": "文档", "format": "PDF", "size": "3.8 MB", "summary": "版头、主体、版记各要素一图看懂，字号字体精确到磅值。" },
-        { "id": "w2", "title": "15 种法定公文写作要点（通知/请示/报告…）", "type": "文档", "format": "PDF", "size": "2.9 MB", "summary": "每种文种的适用范围、结构套路与易错点提醒。" },
-        { "id": "w3", "title": "常用事务文书写作模板（总结/计划/简报）", "type": "模板", "format": "DOCX", "size": "1.4 MB", "summary": "工作总结、年度计划、工作简报等高频文书的成稿模板。" },
-        { "id": "w4", "title": "公文常用词语与规范表述手册", "type": "文档", "format": "PDF", "size": "1.7 MB", "summary": "开头用语、承转用语、结尾用语与常见不规范表述对照。" },
-        { "id": "w5", "title": "领导讲话稿写作框架与范例", "type": "文档", "format": "DOCX", "size": "2.2 MB", "summary": "会议讲话、动员部署、总结表彰三类场景的框架与金句素材。" }
+        {
+          "id": "w1",
+          "title": "党政机关公文格式（GB/T 9704）图解速查",
+          "type": "文档",
+          "format": "PDF",
+          "size": "3.8 MB",
+          "summary": "版头、主体、版记各要素一图看懂，字号字体精确到磅值。"
+        },
+        {
+          "id": "w2",
+          "title": "15 种法定公文写作要点（通知/请示/报告…）",
+          "type": "文档",
+          "format": "PDF",
+          "size": "2.9 MB",
+          "summary": "每种文种的适用范围、结构套路与易错点提醒。"
+        },
+        {
+          "id": "w3",
+          "title": "常用事务文书写作模板（总结/计划/简报）",
+          "type": "模板",
+          "format": "DOCX",
+          "size": "1.4 MB",
+          "summary": "工作总结、年度计划、工作简报等高频文书的成稿模板。"
+        },
+        {
+          "id": "w4",
+          "title": "公文常用词语与规范表述手册",
+          "type": "文档",
+          "format": "PDF",
+          "size": "1.7 MB",
+          "summary": "开头用语、承转用语、结尾用语与常见不规范表述对照。"
+        },
+        {
+          "id": "w5",
+          "title": "领导讲话稿写作框架与范例",
+          "type": "文档",
+          "format": "DOCX",
+          "size": "2.2 MB",
+          "summary": "会议讲话、动员部署、总结表彰三类场景的框架与金句素材。"
+        }
       ]
     },
     {
@@ -58,11 +477,46 @@
       "icon": "rocket",
       "description": "计算机等级考试、教资考试、雅思托福等升学晋升备考资料，职业发展与自我提升并进。",
       "resources": [
-        { "id": "i1", "title": "计算机等级考试（NCRE）二级 MS Office 高频考点速记", "type": "文档", "format": "PDF", "size": "3.1 MB", "summary": "Word / Excel / PPT 操作题高频考点与选择题题库精简版。" },
-        { "id": "i2", "title": "教师资格证笔试科目一 + 科目二备考全攻略", "type": "文档", "format": "PDF", "size": "4.2 MB", "summary": "综合素质与教育知识能力的考点框架、记忆口诀与答题模板。" },
-        { "id": "i3", "title": "教资面试结构化问答 + 试讲逐字稿范例", "type": "文档", "format": "DOCX", "size": "2.0 MB", "summary": "结构化八大类题型应答思路与 20 篇试讲逐字稿范例。" },
-        { "id": "i4", "title": "雅思/托福核心词汇与听说读写备考规划", "type": "文档", "format": "PDF", "size": "5.5 MB", "summary": "三个月备考时间表、分项提分策略与机考注意事项。" },
-        { "id": "i5", "title": "普通话水平测试应试技巧（教资认定必备）", "type": "文档", "format": "PDF", "size": "1.3 MB", "summary": "朗读短文、命题说话评分标准与考前冲刺训练法。" }
+        {
+          "id": "i1",
+          "title": "计算机等级考试（NCRE）二级 MS Office 高频考点速记",
+          "type": "文档",
+          "format": "PDF",
+          "size": "3.1 MB",
+          "summary": "Word / Excel / PPT 操作题高频考点与选择题题库精简版。"
+        },
+        {
+          "id": "i2",
+          "title": "教师资格证笔试科目一 + 科目二备考全攻略",
+          "type": "文档",
+          "format": "PDF",
+          "size": "4.2 MB",
+          "summary": "综合素质与教育知识能力的考点框架、记忆口诀与答题模板。"
+        },
+        {
+          "id": "i3",
+          "title": "教资面试结构化问答 + 试讲逐字稿范例",
+          "type": "文档",
+          "format": "DOCX",
+          "size": "2.0 MB",
+          "summary": "结构化八大类题型应答思路与 20 篇试讲逐字稿范例。"
+        },
+        {
+          "id": "i4",
+          "title": "雅思/托福核心词汇与听说读写备考规划",
+          "type": "文档",
+          "format": "PDF",
+          "size": "5.5 MB",
+          "summary": "三个月备考时间表、分项提分策略与机考注意事项。"
+        },
+        {
+          "id": "i5",
+          "title": "普通话水平测试应试技巧（教资认定必备）",
+          "type": "文档",
+          "format": "PDF",
+          "size": "1.3 MB",
+          "summary": "朗读短文、命题说话评分标准与考前冲刺训练法。"
+        }
       ]
     }
   ]

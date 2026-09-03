@@ -77,6 +77,41 @@ textarea.input { resize: vertical; line-height: 1.65; }
 .dropzone .dz-sub { font-size: 12.5px; display: block; margin-top: 4px; }
 .fileinfo { font-size: 13.5px; color: var(--text-muted); margin-bottom: 16px; }
 .fileinfo b { color: var(--text); font-weight: 600; }
+/* 已上传态（视频/音频/文本页的 fileinfo） */
+.fileinfo.uploaded { color: var(--success, #2e9e6b); }
+.fileinfo.uploaded b { color: var(--success, #2e9e6b); }
+
+/* 已上传文件徽标（PDF 工具页 Dropzone 工厂） */
+.dz-badge {
+  display: inline-flex; align-items: center; flex-shrink: 0;
+  font-size: 11px; font-weight: 600; line-height: 1;
+  color: var(--success, #2e9e6b);
+  background: rgba(46,158,107,.12);
+  border: 1px solid rgba(46,158,107,.35);
+  border-radius: 999px; padding: 3px 8px;
+}
+.dz-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.dz-file {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface-soft, #f6f7f9);
+  border: 1px solid var(--border, #e3e6ea);
+  border-radius: var(--radius-sm, 8px); padding: 8px 10px; font-size: 13.5px;
+}
+.dz-file .dz-name { font-weight: 600; color: var(--text, #1f2937); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dz-file .dz-size { color: var(--text-muted, #8a93a2); font-size: 12px; flex-shrink: 0; }
+.dz-file .dz-del {
+  margin-left: auto; border: none; background: transparent; cursor: pointer;
+  font-size: 18px; line-height: 1; color: var(--text-muted, #8a93a2); padding: 0 4px;
+}
+.dz-file .dz-del:hover { color: var(--danger, #d9534f); }
+.dz-error {
+  color: var(--danger);
+  font-size: 13px;
+  background: #fff0f0;
+  border: 1px solid rgba(217, 83, 79, .25);
+  border-radius: var(--radius-sm, 8px);
+  padding: 8px 10px;
+}
 
 /* ============ 状态提示 ============ */
 .status { margin-top: 16px; font-size: 13.5px; min-height: 20px; }
@@ -122,6 +157,99 @@ textarea.input { resize: vertical; line-height: 1.65; }
 .tag-文档 { background: var(--primary-50); color: var(--primary-700); }
 .tag-模板 { background: #e8f7ee; color: #14713d; }
 .tag-课件 { background: #fdf0e4; color: #a05a09; }
+.tag-经验 { background: #e9f4ef; color: #157a55; }
+.tag-转载 { background: #fdf0e4; color: #a05a09; }
+.tag-资源 { background: var(--primary-50); color: var(--primary-700); }
+.resource-table .r-origin { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+.resource-table .r-origin a { color: var(--primary); }
+
+/* ============ 我要贡献经验（模态框表单） ============ */
+.contrib-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+}
+.contrib-head-left { display: flex; align-items: flex-start; gap: 14px; }
+
+.modal-mask {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(15, 23, 42, .45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal-mask[hidden] { display: none; }
+.modal {
+  background: var(--surface); border-radius: var(--radius, 12px);
+  width: 560px; max-width: 100%; max-height: 88vh; overflow: auto;
+  padding: 22px 24px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, .25);
+  animation: modalIn .22s var(--ease);
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(14px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.modal-head h3 {
+  display: flex; align-items: center; gap: 8px;
+  margin: 0; font-size: 17px; color: var(--text);
+}
+.modal-close {
+  border: none; background: transparent; cursor: pointer;
+  font-size: 22px; line-height: 1; color: var(--text-muted);
+  padding: 2px 6px; border-radius: 6px;
+}
+.modal-close:hover { color: var(--danger); background: #fff0f0; }
+
+.kind-tabs {
+  display: flex; gap: 6px; padding: 4px;
+  background: var(--surface-soft, #f4f6f9); border-radius: 10px; margin-bottom: 16px;
+}
+.kind-tab {
+  flex: 1; border: none; background: transparent; cursor: pointer;
+  padding: 8px 0; font-size: 13.5px; font-family: inherit;
+  color: var(--text-secondary); border-radius: 8px;
+  transition: all var(--dur) var(--ease);
+}
+.kind-tab.active {
+  background: var(--surface); color: var(--primary);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .1);
+}
+
+.contrib-modal .f-label {
+  display: block; font-size: 13px; font-weight: 600; color: var(--text);
+  margin: 12px 0 6px;
+}
+.contrib-modal .req { color: var(--danger); }
+.contrib-modal .f-opt { font-weight: 400; color: var(--text-muted); font-size: 12px; }
+.contrib-modal .f-hint { margin: 6px 0 0; font-size: 12px; color: var(--text-muted); }
+.contrib-modal textarea.input { resize: vertical; line-height: 1.7; }
+
+.f-err {
+  margin-top: 12px; padding: 8px 12px;
+  font-size: 13px; color: var(--danger);
+  background: #fff0f0; border: 1px solid rgba(217, 83, 79, .25);
+  border-radius: 8px;
+}
+.f-actions {
+  display: flex; justify-content: flex-end; gap: 10px;
+  margin-top: 18px;
+}
+
+/* 帖子详情 */
+.post-meta {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 12.5px; color: var(--text-muted);
+  padding-bottom: 12px; border-bottom: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+.post-body {
+  font-size: 14px; line-height: 1.9; color: var(--text-secondary);
+  white-space: normal; word-break: break-word;
+}
 
 .loadbox { text-align: center; padding: 48px 0; color: var(--text-muted); font-size: 13.5px; }
 

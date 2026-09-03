@@ -7,7 +7,9 @@
  *   POST /api/tools/audio-extract   file -> Blob(mp3)
  *   POST /api/tools/video-clip      file + start/end -> Blob(video)
  *   POST /api/tools/text-extract    file -> { text, pages? }
+ *   POST /api/tools/handwriting     { text, style } -> 手写体图片 Blob（开发中）
  * ============================================================ */
+import { API, API_BASE } from '../core/config.js';
 import { apiJson, postFileForBlob, postFileForJson } from './client.js';
 
 export const toolsApi = {
@@ -38,5 +40,23 @@ export const toolsApi = {
   /** 文本提取：PDF/TXT/MD/CSV/JSON -> { text, pages? } */
   textExtract(file) {
     return postFileForJson('/tools/text-extract', file);
+  },
+
+  /** 手写体转换：打印体文字 -> 手写体图片 Blob（功能开发中，后端逐步实现） */
+  async handwriting(text, style = 'default') {
+    const res = await fetch(API + API_BASE + '/tools/handwriting', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, style }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || `请求失败（${res.status}）`);
+    }
+    const blob = await res.blob();
+    const cd = res.headers.get('Content-Disposition') || '';
+    const m = cd.match(/filename\*=UTF-8''([^;]+)/);
+    const filename = m ? decodeURIComponent(m[1]) : 'handwriting.png';
+    return { blob, filename };
   },
 };

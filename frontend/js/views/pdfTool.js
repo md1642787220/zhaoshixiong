@@ -7,6 +7,7 @@ import { getPdfTool, getPdfCategory } from '../data/pdfTools.js';
 import { icon } from '../components/icon.js';
 import { esc, setStatus, toast, downloadBlob } from '../utils.js';
 import { processPdfWs } from '../api/pdfWs.js';
+import { processPdfHttp } from '../api/pdfHttp.js';
 import { Dropzone } from '../components/dropzone.js';
 
 // 通过 WebSocket 走实时进度的动作（其余动作仍用 REST）
@@ -453,12 +454,15 @@ export default {
     const btn = document.getElementById('btn-' + tool.id);
 
     /* 1) 上传区（单/多文件） */
+    const MAX_SIZE = 30 * 1024 * 1024;
     const dz = Dropzone(dzEl, {
       multiple: !!tool.multi,
       // 默认只收 PDF；需要其他输入的工具（图片转 PDF 等）在 data/pdfTools.js 里用 accept 覆盖
       accept: tool.accept || '.pdf',
       label: tool.dzLabel
         || (tool.multi ? '拖入多个 PDF / 点击选择（合并、叠加等）' : '拖入 PDF 文件 / 点击选择'),
+      maxSize: MAX_SIZE,
+      onError: (file, msg) => { toast(msg); setStatus(statusEl, 'err', msg); },
     });
 
     /* 2) 条件字段显隐（when） */
@@ -515,6 +519,15 @@ export default {
       const files = dz.getFiles();
       if (!files.length) { toast('请先上传文件'); setStatus(statusEl, 'err', '请先上传文件'); return; }
 
+      // 文件大小限制兜底校验（与后端一致：30MB；正常情况下 Dropzone 已在上传时拦截）
+      const tooBig = files.find((f) => f.size > MAX_SIZE);
+      if (tooBig) {
+        const msg = `文件「${tooBig.name}」(${Math.round(tooBig.size / 1024 / 1024 * 10) / 10}MB) 超过 30MB 限制，请压缩或拆分后重试。`;
+        toast(msg);
+        setStatus(statusEl, 'err', msg);
+        return;
+      }
+
       // WebSocket 实时进度通道（目前支持 PDF→Word）
       if (WS_ACTIONS.includes(tool.action)) {
         const progressEl = document.getElementById('progress-' + tool.id);
@@ -523,17 +536,24 @@ export default {
         progressEl.hidden = false;
         btn.disabled = true;
         setStatus(statusEl, 'processing', '正在上传并转换…');
+
+        // 大文件走 HTTP 高速通道（流式上传/返回，内存占用低、不易断开）
+        const useHttp = files[0].size > 5 * 1024 * 1024;
+        const onProgress = (p) => {
+          let pct = 0;
+          if (p.pageTotal) pct = Math.round((p.page / p.pageTotal) * 100);
+          else if (p.stageTotal) pct = Math.round((p.stage / p.stageTotal) * 100);
+          else if (typeof p.percent === 'number') pct = p.percent;
+          bar.style.width = pct + '%';
+          let label = p.message || '处理中';
+          if (useHttp && p.percent === 100) label = '上传完成，正在服务器端转换…';
+          else if (pct) label += `  ${pct}%`;
+          tip.textContent = label;
+        };
         try {
-          const { blob, filename } = await processPdfWs(
-            tool.action, files[0], collectParams(form, tool),
-            (p) => {
-              let pct = 0;
-              if (p.pageTotal) pct = Math.round((p.page / p.pageTotal) * 100);
-              else if (p.stageTotal) pct = Math.round((p.stage / p.stageTotal) * 100);
-              bar.style.width = pct + '%';
-              tip.textContent = (p.message || '处理中') + (pct ? `  ${pct}%` : '');
-            }
-          );
+          const { blob, filename } = useHttp
+            ? await processPdfHttp(tool.action, files[0], collectParams(form, tool), onProgress)
+            : await processPdfWs(tool.action, files[0], collectParams(form, tool), onProgress);
           downloadBlob(blob, filename);
           bar.style.width = '100%';
           tip.textContent = '完成';

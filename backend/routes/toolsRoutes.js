@@ -7,6 +7,7 @@
  *   POST /api/tools/audio-extract   file -> 音频文件流
  *   POST /api/tools/video-clip      file + start/end -> 视频文件流
  *   POST /api/tools/text-extract    file -> { text, pages? }
+ *   POST /api/tools/handwriting     { text, style } -> 手写体图片文件流
  * ============================================================ */
 const express = require('express');
 const { asyncHandler } = require('../core/http');
@@ -14,9 +15,9 @@ const { BadRequestError } = require('../core/errors');
 
 /**
  * 创建工具路由
- * @param {{convertService: object, mediaService: object, textService: object, storage: object, logger: object}} deps
+ * @param {{convertService: object, mediaService: object, textService: object, handwritingService: object, storage: object, logger: object}} deps
  */
-function createToolsRoutes({ convertService, mediaService, textService, storage, logger }) {
+function createToolsRoutes({ convertService, mediaService, textService, handwritingService, storage, logger }) {
   const router = express.Router();
 
   /** 以文件流响应并在结束后清理临时文件 */
@@ -87,6 +88,15 @@ function createToolsRoutes({ convertService, mediaService, textService, storage,
     } finally {
       storage.remove(src);
     }
+  }));
+
+  /** 手写体转换：打印体文字 -> 手写体图片（接口预留，后端逐步实现） */
+  router.post('/handwriting', asyncHandler(async (req, res) => {
+    const text = (req.body && req.body.text) || '';
+    if (!text.trim()) throw new BadRequestError('请输入要转换的文字');
+    const style = (req.body && req.body.style) || 'default';
+    const out = await handwritingService.convert({ text, style });
+    streamFile(res, out);
   }));
 
   return router;

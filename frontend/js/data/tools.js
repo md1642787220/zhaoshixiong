@@ -38,6 +38,13 @@ export const TOOLS = [
     desc: '输入素材名称即可解析出下载链接，便于课件配音与活动配乐取材。',
     path: '/tools/music',
   },
+  {
+    id: 'handwriting',
+    icon: 'pen-tool',
+    name: '手写体转换',
+    desc: '将一段打印体文字转换为手写体图片，便于手写笔记、签名等场景（功能开发中）。',
+    path: '/tools/handwriting',
+  },
 ];
 
 /** 格式转换支持的类型与下载文件名 */

@@ -1,0 +1,72 @@
+{
+  "updatedAt": "2026-09-03T00:00:00.000Z",
+  "description": "师兄 · 网址导航：收录全国各地政府官方网站，以及各地教育机构和学校官方网站。链接由爬取程序定期校验更新。",
+  "categories": [
+    {
+      "id": "gov",
+      "name": "政府",
+      "icon": "landmark",
+      "description": "全国各地政府官方网站",
+      "sites": [
+        { "id": "gov-central", "name": "中国政府网", "url": "https://www.gov.cn", "region": "全国", "level": "国家级", "description": "中华人民共和国中央人民政府门户网站" },
+        { "id": "gov-bj", "name": "首都之窗（北京）", "url": "https://www.beijing.gov.cn", "region": "北京", "level": "省级", "description": "北京市人民政府门户网站" },
+        { "id": "gov-tj", "name": "天津市人民政府", "url": "https://www.tj.gov.cn", "region": "天津", "level": "省级", "description": "天津市人民政府门户网站" },
+        { "id": "gov-heb", "name": "河北省人民政府", "url": "https://www.hebei.gov.cn", "region": "河北", "level": "省级", "description": "河北省人民政府门户网站" },
+        { "id": "gov-sx", "name": "山西省人民政府", "url": "https://www.shanxi.gov.cn", "region": "山西", "level": "省级", "description": "山西省人民政府门户网站" },
+        { "id": "gov-nmg", "name": "内蒙古自治区人民政府", "url": "https://www.nmg.gov.cn", "region": "内蒙古", "level": "省级", "description": "内蒙古自治区人民政府门户网站" },
+        { "id": "gov-ln", "name": "辽宁省人民政府", "url": "https://www.ln.gov.cn", "region": "辽宁", "level": "省级", "description": "辽宁省人民政府门户网站" },
+        { "id": "gov-jl", "name": "吉林省人民政府", "url": "https://www.jl.gov.cn", "region": "吉林", "level": "省级", "description": "吉林省人民政府门户网站" },
+        { "id": "gov-hlj", "name": "黑龙江省人民政府", "url": "https://www.hlj.gov.cn", "region": "黑龙江", "level": "省级", "description": "黑龙江省人民政府门户网站" },
+        { "id": "gov-sh", "name": "上海市人民政府", "url": "https://www.shanghai.gov.cn", "region": "上海", "level": "省级", "description": "上海市人民政府门户网站" },
+        { "id": "gov-js", "name": "江苏省人民政府", "url": "https://www.jiangsu.gov.cn", "region": "江苏", "level": "省级", "description": "江苏省人民政府门户网站" },
+        { "id": "gov-zj", "name": "浙江省人民政府", "url": "https://www.zj.gov.cn", "region": "浙江", "level": "省级", "description": "浙江省人民政府门户网站" },
+        { "id": "gov-ah", "name": "安徽省人民政府", "url": "https://www.ah.gov.cn", "region": "安徽", "level": "省级", "description": "安徽省人民政府门户网站" },
+        { "id": "gov-fj", "name": "福建省人民政府", "url": "https://www.fujian.gov.cn", "region": "福建", "level": "省级", "description": "福建省人民政府门户网站" },
+        { "id": "gov-jx", "name": "江西省人民政府", "url": "https://www.jiangxi.gov.cn", "region": "江西", "level": "省级", "description": "江西省人民政府门户网站" },
+        { "id": "gov-sd", "name": "山东省人民政府", "url": "https://www.shandong.gov.cn", "region": "山东", "level": "省级", "description": "山东省人民政府门户网站" },
+        { "id": "gov-hn", "name": "河南省人民政府", "url": "https://www.henan.gov.cn", "region": "河南", "level": "省级", "description": "河南省人民政府门户网站" },
+        { "id": "gov-hub", "name": "湖北省人民政府", "url": "https://www.hubei.gov.cn", "region": "湖北", "level": "省级", "description": "湖北省人民政府门户网站" },
+        { "id": "gov-hunan", "name": "湖南省人民政府", "url": "https://www.hunan.gov.cn", "region": "湖南", "level": "省级", "description": "湖南省人民政府门户网站" },
+        { "id": "gov-gd", "name": "广东省人民政府", "url": "https://www.gd.gov.cn", "region": "广东", "level": "省级", "description": "广东省人民政府门户网站" },
+        { "id": "gov-gx", "name": "广西壮族自治区人民政府", "url": "https://www.gxzf.gov.cn", "region": "广西", "level": "省级", "description": "广西壮族自治区人民政府门户网站" },
+        { "id": "gov-hainan", "name": "海南省人民政府", "url": "https://www.hainan.gov.cn", "region": "海南", "level": "省级", "description": "海南省人民政府门户网站" },
+        { "id": "gov-cq", "name": "重庆市人民政府", "url": "https://www.cq.gov.cn", "region": "重庆", "level": "省级", "description": "重庆市人民政府门户网站" },
+        { "id": "gov-sc", "name": "四川省人民政府", "url": "https://www.sc.gov.cn", "region": "四川", "level": "省级", "description": "四川省人民政府门户网站" },
+        { "id": "gov-gz", "name": "贵州省人民政府", "url": "https://www.guizhou.gov.cn", "region": "贵州", "level": "省级", "description": "贵州省人民政府门户网站" },
+        { "id": "gov-yn", "name": "云南省人民政府", "url": "https://www.yn.gov.cn", "region": "云南", "level": "省级", "description": "云南省人民政府门户网站" },
+        { "id": "gov-xz", "name": "西藏自治区人民政府", "url": "https://www.xizang.gov.cn", "region": "西藏", "level": "省级", "description": "西藏自治区人民政府门户网站" },
+        { "id": "gov-shaanxi", "name": "陕西省人民政府", "url": "https://www.shaanxi.gov.cn", "region": "陕西", "level": "省级", "description": "陕西省人民政府门户网站" },
+        { "id": "gov-gs", "name": "甘肃省人民政府", "url": "https://www.gansu.gov.cn", "region": "甘肃", "level": "省级", "description": "甘肃省人民政府门户网站" },
+        { "id": "gov-qh", "name": "青海省人民政府", "url": "https://www.qinghai.gov.cn", "region": "青海", "level": "省级", "description": "青海省人民政府门户网站" },
+        { "id": "gov-nx", "name": "宁夏回族自治区人民政府", "url": "https://www.nx.gov.cn", "region": "宁夏", "level": "省级", "description": "宁夏回族自治区人民政府门户网站" },
+        { "id": "gov-xj", "name": "新疆维吾尔自治区人民政府", "url": "https://www.xinjiang.gov.cn", "region": "新疆", "level": "省级", "description": "新疆维吾尔自治区人民政府门户网站" }
+      ]
+    },
+    {
+      "id": "edu",
+      "name": "教育",
+      "icon": "graduation-cap",
+      "description": "各地教育机构和学校官方网站",
+      "sites": [
+        { "id": "edu-moe", "name": "中华人民共和国教育部", "url": "http://www.moe.gov.cn", "region": "全国", "level": "国家级", "description": "中华人民共和国教育部官方网站" },
+        { "id": "edu-neea", "name": "中国教育考试网", "url": "http://www.neea.edu.cn", "region": "全国", "level": "国家级", "description": "教育部教育考试院官方网站" },
+        { "id": "edu-csc", "name": "国家留学网", "url": "https://www.csc.edu.cn", "region": "全国", "level": "国家级", "description": "国家留学基金管理委员会" },
+        { "id": "edu-bj", "name": "北京市教育委员会", "url": "https://jw.beijing.gov.cn", "region": "北京", "level": "省级", "description": "北京市教育委员会官方网站" },
+        { "id": "edu-sh", "name": "上海市教育委员会", "url": "https://edu.sh.gov.cn", "region": "上海", "level": "省级", "description": "上海市教育委员会官方网站" },
+        { "id": "edu-js", "name": "江苏省教育厅", "url": "https://jyt.jiangsu.gov.cn", "region": "江苏", "level": "省级", "description": "江苏省教育厅官方网站" },
+        { "id": "edu-zj", "name": "浙江省教育厅", "url": "http://jyt.zj.gov.cn", "region": "浙江", "level": "省级", "description": "浙江省教育厅官方网站" },
+        { "id": "edu-gd", "name": "广东省教育厅", "url": "http://edu.gd.gov.cn", "region": "广东", "level": "省级", "description": "广东省教育厅官方网站" },
+        { "id": "edu-tsinghua", "name": "清华大学", "url": "https://www.tsinghua.edu.cn", "region": "北京", "level": "高校", "description": "清华大学官方网站" },
+        { "id": "edu-pku", "name": "北京大学", "url": "https://www.pku.edu.cn", "region": "北京", "level": "高校", "description": "北京大学官方网站" },
+        { "id": "edu-fudan", "name": "复旦大学", "url": "https://www.fudan.edu.cn", "region": "上海", "level": "高校", "description": "复旦大学官方网站" },
+        { "id": "edu-sjtu", "name": "上海交通大学", "url": "https://www.sjtu.edu.cn", "region": "上海", "level": "高校", "description": "上海交通大学官方网站" },
+        { "id": "edu-zju", "name": "浙江大学", "url": "https://www.zju.edu.cn", "region": "浙江", "level": "高校", "description": "浙江大学官方网站" },
+        { "id": "edu-nju", "name": "南京大学", "url": "https://www.nju.edu.cn", "region": "江苏", "level": "高校", "description": "南京大学官方网站" },
+        { "id": "edu-whu", "name": "武汉大学", "url": "https://www.whu.edu.cn", "region": "湖北", "level": "高校", "description": "武汉大学官方网站" },
+        { "id": "edu-sysu", "name": "中山大学", "url": "https://www.sysu.edu.cn", "region": "广东", "level": "高校", "description": "中山大学官方网站" },
+        { "id": "edu-xjtu", "name": "西安交通大学", "url": "https://www.xjtu.edu.cn", "region": "陕西", "level": "高校", "description": "西安交通大学官方网站" },
+        { "id": "edu-scu", "name": "四川大学", "url": "https://www.scu.edu.cn", "region": "四川", "level": "高校", "description": "四川大学官方网站" }
+      ]
+    }
+  ]
+}

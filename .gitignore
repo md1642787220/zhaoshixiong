@@ -10,3 +10,16 @@ backend/_verify/
 __pycache__/
 *.pyc
 test_pdfs/
+
+# Python 虚拟环境
+.venv/
+venv/
+env/
+*.egg-info/
+
+# 运行时上传文件（用户数据，不入库）
+backend/data/uploads/
+
+# 本地构建 / 输出目录
+output/
+scripts/output/

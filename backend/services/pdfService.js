@@ -16,7 +16,7 @@ const { NotFoundError, BadRequestError } = require('../core/errors');
 
 /** 已规划的 PDF 能力清单 */
 const PLANNED = [
-  'convert-office', 'to-pdf', 'to-pdfa', 'to-html', 'html-to-pdf', 'markdown-to-pdf',
+  'convert-office', 'to-pdf', 'to-pdfa', 'html-to-pdf', 'markdown-to-pdf',
   'to-image', 'image-to-pdf', 'to-presentation',
   'merge', 'split', 'rotate', 'auto-rotate', 'extract-pages', 'reorganize',
   'page-numbers', 'remove-pages', 'remove-blanks', 'crop', 'page-layout', 'single-large-page',
@@ -206,14 +206,6 @@ function createPdfService({ pdfEngine, workerClient, storage, logger } = {}) {
         if (!mdText) throw new BadRequestError('请上传 .md 文件或提供文本');
         return { kind: 'pdf', buffer: await P.markdownToPdf(mdText, body), filename: 'converted.pdf' };
       }
-      case 'to-html':
-        return {
-          kind: 'text',
-          content: await P.pdfToHtml(files[0]),
-          filename: 'converted.html',
-          contentType: 'text/html; charset=utf-8',
-        };
-
       /* ---------- 高级 ---------- */
       case 'overlay': {
         const bg = storage.readParamFile(req, 'background');

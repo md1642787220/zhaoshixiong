@@ -21,7 +21,7 @@ function attachPdfWs(server, { pdfWorkerUrl, logger } = {}) {
     return;
   }
 
-  const wss = new WebSocketServer({ server, path: '/ws/pdf' });
+  const wss = new WebSocketServer({ server, path: '/ws/pdf', maxPayload: 200 * 1024 * 1024 });
 
   wss.on('connection', (client, req) => {
     const url = new URL(req.url, 'http://localhost');

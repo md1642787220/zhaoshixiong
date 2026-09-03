@@ -1,0 +1,46 @@
+/* ============================================================
+ * nav.css - 网址导航页样式
+ * ============================================================ */
+
+/* 工具栏（分类 tab + 搜索 / 地区筛选） */
+.nav-toolbar { display: flex; flex-direction: column; gap: 16px; margin-bottom: 22px; }
+.nav-filters { display: flex; gap: 12px; flex-wrap: wrap; }
+.nav-search-wrap { position: relative; flex: 1; min-width: 220px; display: flex; align-items: center; }
+.nav-search-wrap .icon { position: absolute; left: 12px; color: var(--text-muted); pointer-events: none; }
+.nav-search-wrap .input { width: 100%; padding-left: 36px; }
+.nav-region { width: 160px; flex-shrink: 0; }
+
+/* 站点卡片 */
+.site-card {
+  display: flex; flex-direction: column; padding: 18px 18px 16px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); text-decoration: none; color: inherit;
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.site-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--primary-200); }
+.site-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.site-name { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.4; }
+.site-desc {
+  font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;
+  margin: 8px 0 12px; flex: 1; min-height: 34px;
+}
+.site-foot { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.site-region {
+  color: var(--text-muted); background: var(--primary-50);
+  padding: 2px 9px; border-radius: var(--radius-full);
+}
+.site-level {
+  color: var(--primary-700); border: 1px solid var(--primary-200);
+  padding: 1px 8px; border-radius: var(--radius-full);
+}
+.site-go { margin-left: auto; color: var(--primary); font-weight: 600; }
+.site-card:hover .site-go { text-decoration: underline; }
+
+/* 链接状态指示点 */
+.status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; background: var(--text-muted); }
+.status-dot.ok { background: #22a06b; }
+.status-dot.bad { background: #e1454a; }
+.status-dot.warn { background: #e0a800; }
+.status-dot.pending { background: #b8c0cc; }
+
+.empty { grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 40px 0; }

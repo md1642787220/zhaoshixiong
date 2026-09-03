@@ -289,49 +289,137 @@
 
 /* ============ 彩蛋互动：卡通蛋（鼠标变锤子光标） ============ */
 .egg-scene {
-  position: relative; width: 170px; height: 200px;
+  position: relative; width: 118px; height: 138px;
   margin: 10px auto 8px; user-select: none; outline: none;
+  cursor: default;
+  transition: opacity .3s ease .68s, height .4s var(--ease) .7s, margin .4s var(--ease) .7s;
+}
+/* 蛋壳飞走后舞台收起，故事正好从蛋消失的位置长出来 */
+.about-section.cracked .egg-scene {
+  opacity: 0; height: 0; margin-top: 0; margin-bottom: 0;
+}
+
+/* 砸蛋进度提示气泡（点一下/两下后的引导文案，自动渐隐） */
+.egg-hint {
+  position: absolute; left: 50%; bottom: 92%;
+  transform: translate(-50%, 6px);
+  padding: 6px 12px; border-radius: 999px;
+  background: var(--surface); color: var(--text-secondary);
+  font-size: 12.5px; font-weight: 600; white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, .16);
+  opacity: 0; pointer-events: none; z-index: 6;
+  transition: opacity .45s ease, transform .45s ease;
+}
+.egg-hint.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* 蛋下方常驻提示「到底啦」，随彩蛋消失（场景收起）一起淡出 */
+.egg-end-tip {
+  position: absolute; left: 50%; top: 100%; margin-top: 2px;
+  transform: translateX(-50%);
+  font-size: 12px; color: var(--text-muted);
+  white-space: nowrap; pointer-events: none;
+}
+/* 未破时鼠标变为锤子；砸开后恢复成正常鼠标 */
+.about-section:not(.cracked) .egg-scene {
   cursor: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='32'%20height='32'%20viewBox='0%200%2032%2032'%3E%3Crect%20x='13'%20y='14'%20width='6'%20height='16'%20rx='3'%20fill='%23b08968'%20stroke='%237a5c3e'%20stroke-width='1.5'/%3E%3Crect%20x='3'%20y='4'%20width='26'%20height='12'%20rx='3'%20fill='%236b7a99'%20stroke='%233a4049'%20stroke-width='1.5'/%3E%3Crect%20x='6'%20y='6'%20width='20'%20height='4'%20rx='2'%20fill='%238090ad'/%3E%3C/svg%3E") 16 10, pointer;
 }
+/* --tilt 躲避倾斜、--shift 躲避位移，均由 JS 按锤子位置实时写入 */
 .egg {
-  position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
-  width: 118px; height: 128px;
+  position: absolute; left: 50%; bottom: 0;
+  transform: translateX(calc(-50% + var(--shift, 0px))) rotate(var(--tilt, 0deg));
+  transform-origin: center bottom;
+  transition: transform .28s cubic-bezier(.22, .9, .25, 1);
+  width: 74px; height: 80px;
 }
+/* 眼珠跟随锤子：--ex / --ey 为眼珠在眼白内的偏移 */
+.eye-ball {
+  transform: translate(var(--ex, 0px), var(--ey, 0px));
+  transition: transform .1s ease-out;
+}
+.egg-shadow { transition: opacity .3s ease .3s; }
+.about-section.cracked .egg-shadow { opacity: 0; }
 .egg-base { transition: opacity .1s ease .06s; }
 .shell { opacity: 0; transform-box: fill-box; transform-origin: center bottom; }
 .about-section.cracked .egg-base { opacity: 0; }
-.about-section.cracked .shell { opacity: 1; transition: opacity 0s .2s; }
+.about-section.cracked .shell { opacity: 1; transition: opacity 0s .18s; }
 
-/* 未破时鼠标靠近，蛋轻轻晃一晃 */
-.about-section:not(.cracked) .egg-scene:hover .egg { animation: eggWobble .8s ease-in-out infinite; }
-@keyframes eggWobble {
-  0%, 100% { transform: translateX(-50%) rotate(0); }
-  25% { transform: translateX(-50%) rotate(-3deg); }
-  75% { transform: translateX(-50%) rotate(3deg); }
+/* 破壳瞬间：从蛋的位置扩散一圈暖色光晕 */
+.egg-scene::after {
+  content: ''; position: absolute; left: 50%; top: 52%;
+  width: 48px; height: 48px; margin: -24px 0 0 -24px;
+  border-radius: 50%; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle, rgba(255, 209, 102, .9), rgba(255, 209, 102, 0) 68%);
+}
+.about-section.cracked .egg-scene::after { animation: eggBurst .55s ease-out .16s forwards; }
+@keyframes eggBurst {
+  0%   { opacity: 0; transform: scale(.25); }
+  35%  { opacity: 1; transform: scale(1.4); }
+  100% { opacity: 0; transform: scale(2.5); }
 }
 
-/* 表情：正常脸 → 破时震惊脸（叉叉眼） */
+/* 未破时鼠标靠近：蛋紧张地呼吸（动画内保留躲避倾斜，两者不打架） */
+.about-section:not(.cracked) .egg-scene:hover .egg { animation: eggBreathe 1s ease-in-out infinite; }
+@keyframes eggBreathe {
+  0%, 100% {
+    transform: translateX(calc(-50% + var(--shift, 0px))) rotate(var(--tilt, 0deg)) scale(1);
+  }
+  50% {
+    transform: translateX(calc(-50% + var(--shift, 0px))) rotate(var(--tilt, 0deg)) scale(1.045);
+  }
+}
+
+/* 被砸一下：先压扁再弹起回弹（squash & stretch） */
+.about-section:not(.cracked) .egg-scene.hit .egg { animation: eggHit .46s cubic-bezier(.22, .9, .25, 1); }
+@keyframes eggHit {
+  0%   { transform: translateX(calc(-50% + var(--shift, 0px))) rotate(var(--tilt, 0deg)) scale(1, 1) translateY(0); }
+  22%  { transform: translateX(calc(-50% + var(--shift, 0px))) rotate(var(--tilt, 0deg)) scale(1.14, .76) translateY(3px); }
+  48%  { transform: translateX(calc(-50% + var(--shift, 0px))) rotate(var(--tilt, 0deg)) scale(.92, 1.12) translateY(-8px); }
+  74%  { transform: translateX(calc(-50% + var(--shift, 0px))) rotate(var(--tilt, 0deg)) scale(1.05, .94) translateY(0); }
+  100% { transform: translateX(calc(-50% + var(--shift, 0px))) rotate(var(--tilt, 0deg)) scale(1, 1) translateY(0); }
+}
+
+/* 蛋平时每隔几秒眨一次眼（眼珠高度压扁模拟闭合） */
+.eye, .eye-dot {
+  transform-box: fill-box; transform-origin: center;
+  animation: blink 4s ease-in-out infinite;
+}
+@keyframes blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  93%           { transform: scaleY(.08); }
+  96%           { transform: scaleY(1); }
+}
+/* 被砸疼痛时不眨眼，保持 ＞_＜ 眯眼 */
+.egg-scene.hit .eye, .egg-scene.hit .eye-dot { animation: none; }
+
+/* 表情：正常脸 → 破时震惊脸（叉叉眼 + 张嘴） */
 .eye-x { opacity: 0; }
 .about-section.cracked .eye-x { opacity: 1; }
 .about-section.cracked .face .eye,
+.about-section.cracked .face .eye-dot,
 .about-section.cracked .face .mouth { opacity: 0; }
+
+/* 被砸时：隐藏正常眼珠/微笑，露出皱眉 + 眯眼 + 瘪嘴 */
+.face-pain { opacity: 0; transition: opacity .08s ease; }
+.egg-scene.hit .eye-ball,
+.egg-scene.hit .mouth { opacity: 0; }
+.egg-scene.hit .face-pain { opacity: 1; }
 
 /* 点击瞬间：蛋壳裂成两半向两边蹦飞、淡出 */
 .crack { opacity: 0; }
 .about-section.cracked .crack { opacity: 1; }
-.about-section.cracked .shell-l { animation: shellFlyL .7s cubic-bezier(.3, .7, .3, 1) .2s forwards; }
-.about-section.cracked .shell-r { animation: shellFlyR .7s cubic-bezier(.3, .7, .3, 1) .2s forwards; }
+.about-section.cracked .shell-l { animation: shellFlyL .6s cubic-bezier(.3, .7, .3, 1) .18s forwards; }
+.about-section.cracked .shell-r { animation: shellFlyR .6s cubic-bezier(.3, .7, .3, 1) .18s forwards; }
 .about-section.cracked .face,
 .about-section.cracked .eye-x,
-.about-section.cracked .crack { animation: shellFade .35s ease .26s forwards; }
+.about-section.cracked .crack { animation: shellFade .32s ease .24s forwards; }
 
 @keyframes shellFlyL {
   0%   { transform: translate(0, 0) rotate(0); opacity: 1; }
-  100% { transform: translate(-58px, 22px) rotate(-32deg); opacity: 0; }
+  100% { transform: translate(-38px, 14px) rotate(-26deg); opacity: 0; }
 }
 @keyframes shellFlyR {
   0%   { transform: translate(0, 0) rotate(0); opacity: 1; }
-  100% { transform: translate(58px, 22px) rotate(32deg); opacity: 0; }
+  100% { transform: translate(38px, 14px) rotate(26deg); opacity: 0; }
 }
 @keyframes shellFade { to { opacity: 0; } }
 
@@ -353,11 +441,16 @@ body.shake { animation: bodyShake .45s ease; }
   transition-delay: .62s;
 }
 .about-section.cracked .about-reveal { max-height: 760px; opacity: 1; }
-.about-section.cracked .about-inner { animation: storyIn .65s var(--ease) .62s both; }
+.about-section.cracked .about-inner {
+  transform-origin: top center;
+  animation: storyIn .7s var(--ease) .62s both;
+}
 
+/* 从彩蛋消失的位置（顶部中心）放大长出 */
 @keyframes storyIn {
-  0%   { opacity: 0; transform: translateY(18px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0%   { opacity: 0; transform: scale(.5); }
+  55%  { opacity: 1; }
+  100% { opacity: 1; transform: scale(1); }
 }
 .about-inner {
   display: flex; align-items: center; gap: 40px;

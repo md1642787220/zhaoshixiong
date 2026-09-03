@@ -49,10 +49,18 @@ class UpstreamError extends AppError {
   }
 }
 
+/** 功能尚未实现 / 开发中 501 */
+class NotImplementedError extends AppError {
+  constructor(message = '该功能尚未实现', details) {
+    super(message, { status: 501, code: 'NOT_IMPLEMENTED', details });
+  }
+}
+
 module.exports = {
   AppError,
   BadRequestError,
   NotFoundError,
   EngineUnavailableError,
   UpstreamError,
+  NotImplementedError,
 };
