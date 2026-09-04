@@ -265,6 +265,37 @@
 .music-input:focus { outline: none; border-color: var(--primary-400); box-shadow: var(--ring); }
 .music-hint { font-size: 12.5px; color: var(--text-muted); margin-top: 8px; }
 
+/* ============ 音频素材下载：解析结果卡片 ============ */
+.ms-result-card {
+  margin-top: 18px; padding: 18px 20px;
+  border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-soft);
+}
+.ms-result-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.ms-thumb {
+  width: 88px; height: 56px; object-fit: cover; border-radius: var(--radius);
+  border: 1px solid var(--border); flex: none; background: #fff;
+}
+.ms-result-info { min-width: 0; }
+.ms-title { font-size: 15px; margin: 0 0 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms-meta { font-size: 12.5px; margin: 0; }
+.ms-group { margin-top: 14px; }
+.ms-group-title {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;
+}
+.ms-dl-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; margin-bottom: 6px;
+  border: 1px solid var(--border); border-radius: var(--radius); background: #fff;
+  text-decoration: none; color: inherit; font-size: 13.5px;
+  transition: all var(--dur) var(--ease);
+}
+.ms-dl-item:hover { border-color: var(--primary-200); background: var(--primary-50); }
+.ms-dl-item .icon { color: var(--primary); flex: none; }
+.ms-dl-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms-dl-go .icon { color: var(--text-muted); }
+.ms-dl-item:hover .ms-dl-go .icon { color: var(--primary); }
+
 .music-result {
   margin-top: 18px; padding: 18px 20px;
   border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-soft);

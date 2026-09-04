@@ -4,18 +4,17 @@
  *       上层只依赖抽象接口，替换实现无需改动业务代码。
  * ============================================================ */
 const { createStorage } = require('./infrastructure/storage');
-const { createFfmpeg } = require('./infrastructure/ffmpeg');
 const { createPdfWorkerClient } = require('./infrastructure/pdfWorkerClient');
 const { createPdfEngine } = require('./infrastructure/pdfEngineFactory');
 const { createLearnRepository } = require('./repositories/learnRepository');
 const { createNavRepository } = require('./repositories/navRepository');
 const { createConvertService } = require('./services/convertService');
-const { createMediaService } = require('./services/mediaService');
 const { createTextService } = require('./services/textService');
 const { createLearnService } = require('./services/learnService');
 const { createNavService } = require('./services/navService');
 const { createPdfService } = require('./services/pdfService');
 const { createHandwritingService } = require('./services/handwritingService');
+const { createMediaSourceService } = require('./services/mediaSourceService');
 
 /**
  * 构建容器
@@ -24,7 +23,6 @@ const { createHandwritingService } = require('./services/handwritingService');
 function createContainer({ config, logger }) {
   /* ---------- 基础设施层 ---------- */
   const storage = createStorage({ uploadBytes: config.limits.uploadBytes, logger });
-  const ffmpeg = createFfmpeg({ logger });
   const pdfWorkerClient = createPdfWorkerClient({
     url: config.pdfWorker.url,
     timeoutMs: config.pdfWorker.timeoutMs,
@@ -39,12 +37,12 @@ function createContainer({ config, logger }) {
   /* ---------- 业务服务层 ---------- */
   const services = {
     convert: createConvertService({ logger }),
-    media: createMediaService({ ffmpeg, storage, logger }),
     text: createTextService({ logger }),
     learn: createLearnService({ learnRepository, logger }),
     nav: createNavService({ navRepository, logger }),
     pdf: createPdfService({ pdfEngine, workerClient: pdfWorkerClient, storage, logger }),
     handwriting: createHandwritingService({ storage, logger }),
+    mediaSource: createMediaSourceService({ config, logger }),
   };
 
   /* ---------- 后台定时任务 ---------- */
@@ -58,7 +56,7 @@ function createContainer({ config, logger }) {
     if (logger) logger.info(`导航链接定时校验已启用，间隔 ${navVerifyMs / 3600000}h`);
   }
 
-  return { storage, ffmpeg, pdfWorkerClient, pdfEngine, learnRepository, navRepository, services };
+  return { storage, pdfWorkerClient, pdfEngine, learnRepository, navRepository, services };
 }
 
 module.exports = { createContainer };

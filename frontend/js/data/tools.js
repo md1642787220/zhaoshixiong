@@ -7,7 +7,7 @@ export const TOOLS = [
     id: 'media',
     icon: 'film',
     name: '音视频素材下载',
-    desc: '音频提取、视频截取与音乐素材解析，课件配音配乐一站取材。',
+    desc: '从视频提取音频、视频素材下载与音频素材下载，课件配音配乐一站取材。',
     path: '/tools/media',
   },
   {
