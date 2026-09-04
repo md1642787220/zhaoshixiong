@@ -6,11 +6,7 @@
  * ============================================================ */
 import homeView from './home.js';
 import toolsView from './tools.js';
-import convertView from './convert.js';
-import audioView from './audio.js';
-import videoView from './video.js';
-import textView from './text.js';
-import musicView from './music.js';
+import mediaView from './media.js';
 import handwritingView from './handwriting.js';
 import learnView from './learn.js';
 import categoryView from './category.js';
@@ -23,11 +19,7 @@ import navView from './nav.js';
 export const views = [
   { path: '/', view: homeView },
   { path: '/tools', view: toolsView },
-  { path: '/tools/convert', view: convertView },
-  { path: '/tools/audio', view: audioView },
-  { path: '/tools/video', view: videoView },
-  { path: '/tools/text', view: textView },
-  { path: '/tools/music', view: musicView },
+  { path: '/tools/media', view: mediaView },
   { path: '/tools/handwriting', view: handwritingView },
   { path: '/learn', view: learnView },
   { path: '/learn/:id', view: categoryView },

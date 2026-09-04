@@ -34,6 +34,18 @@
 .card-link::after { content: ' →'; transition: margin var(--dur) var(--ease); display: inline-block; }
 .tool-card:hover .card-link::after, .learn-card:hover .card-link::after { margin-left: 3px; }
 
+/* ============ 音视频素材下载（合并页标签页） ============ */
+.media-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+.media-tab {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: #fff; cursor: pointer; font-size: 13.5px; font-weight: 600;
+  color: var(--text-secondary); transition: all var(--dur) var(--ease);
+}
+.media-tab:hover { color: var(--primary); border-color: var(--primary-200); background: var(--primary-50); }
+.media-tab.active { color: #fff; background: var(--primary); border-color: var(--primary); }
+.media-panel[hidden] { display: none; }
+
 /* ============ 工具详情页布局 ============ */
 .tool-layout { display: grid; grid-template-columns: 226px 1fr; gap: 22px; align-items: start; }
 .tool-nav { padding: 10px; position: sticky; top: 86px; }

@@ -14,7 +14,7 @@ export const SECTIONS = [
   {
     id: 'tools',
     name: '工具板块',
-    desc: '格式转换 / 音视频 / 文本 / 音乐',
+    desc: '音视频素材下载 / 手写体转换',
     icon: 'toolbox',
     path: '/tools',
     badge: `${TOOLS.length} 个`,
