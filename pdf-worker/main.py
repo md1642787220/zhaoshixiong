@@ -376,6 +376,85 @@ async def _download_section(page_url, start, end, filename):
     return StreamingResponse(iter_file(), media_type=mime, headers={"Content-Disposition": cd})
 
 
+def _to_seconds(v):
+    """把 "90" 或 "00:01:30" 转成秒数。"""
+    if not v:
+        return None
+    v = str(v).strip()
+    if ":" in v:
+        parts = v.split(":")
+        return sum(float(x) * 60 ** i for i, x in enumerate(reversed(parts)))
+    return float(v)
+
+
+async def _run_ffmpeg_extract(in_path, out_path, start=None, end=None):
+    """调用 ffmpeg 从视频提取音频（MP3）。"""
+    import subprocess
+    cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error"]
+    if start is not None and start > 0:
+        cmd += ["-ss", str(start)]
+    cmd += ["-i", in_path]
+    if end is not None:
+        duration = end - (start or 0)
+        if duration > 0:
+            cmd += ["-t", str(duration)]
+    cmd += ["-vn", "-ar", "44100", "-ac", "2", "-b:a", "192k", out_path]
+    loop = asyncio.get_running_loop()
+    def run():
+        subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    await loop.run_in_executor(None, run)
+
+
+@app.post("/api/media/extract-audio")
+async def media_extract_audio(request: Request):
+    """上传视频文件，使用 ffmpeg 提取音频为 MP3，支持起止时间裁剪。"""
+    import tempfile, os, shutil
+    MAX_SIZE = 200 * 1024 * 1024  # 200MB
+    tmpdir = tempfile.mkdtemp()
+
+    try:
+        form = await request.form()
+        upload = None
+        start = end = None
+        for key, val in form.multi_items():
+            if isinstance(val, UploadFile):
+                upload = val
+            elif key == "start":
+                start = _to_seconds(val)
+            elif key == "end":
+                end = _to_seconds(val)
+
+        if not upload:
+            return JSONResponse(status_code=400, content={"ok": False, "message": "请上传视频文件"})
+
+        content = await upload.read()
+        if len(content) > MAX_SIZE:
+            return JSONResponse(status_code=413, content={"ok": False, "message": "视频文件超过 200MB 限制"})
+
+        in_path = os.path.join(tmpdir, upload.filename or "input")
+        out_path = os.path.join(tmpdir, "audio.mp3")
+        with open(in_path, "wb") as f:
+            f.write(content)
+
+        await _run_ffmpeg_extract(in_path, out_path, start, end)
+
+        def iter_file():
+            with open(out_path, "rb") as f:
+                while True:
+                    chunk = f.read(256 * 1024)
+                    if not chunk:
+                        break
+                    yield chunk
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
+        cd = "attachment; filename*=UTF-8''audio.mp3"
+        return StreamingResponse(iter_file(), media_type="audio/mpeg", headers={"Content-Disposition": cd})
+    except Exception as e:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"ok": False, "message": f"提取失败：{str(e)}"})
+
 @app.get("/api/media/download")
 async def media_download(
     url: str = Query(...),

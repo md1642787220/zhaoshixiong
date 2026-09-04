@@ -1,14 +1,13 @@
 /* ============================================================
  * views/media.js - 音视频素材下载（合并页）
  * 三个子功能以标签页切换：
- *   1) 从视频提取音频：本地音视频文件 -> WebM 音频（浏览器本地录制）
+ *   1) 从视频提取音频：本地音视频文件 -> 后端 ffmpeg 提取 MP3
  *   2) 视频素材下载：视频源链接 -> 解析后下载视频
  *   3) 音频素材下载：视频源链接 -> 解析音频/视频下载
  *
- * "从视频提取音频"完全在浏览器本地完成（MediaRecorder），无需后端 / ffmpeg。
+ * "从视频提取音频"上传至 pdf-worker，由 ffmpeg 提取音频（MP3）。
  * ============================================================ */
 import { mediaApi } from '../api/media.js';
-import { extractAudio, recorderSupported } from '../utils/recorder.js';
 import { toolPage } from './toolLayout.js';
 import { setupDropzone } from '../components/dropzone.js';
 import { icon } from '../components/icon.js';
@@ -83,11 +82,10 @@ function previewArea(id) {
 
 function extractPanel() {
   return `
-  <div id="au-warn"></div>
   <div class="dropzone" id="au-drop">
     <span class="dz-icon">${icon('film', 32)}${icon('arrow-right', 20)}${icon('music', 32)}</span>
     <span class="dz-main">拖拽音视频文件到此处，或点击选择</span>
-    <span class="dz-sub">支持 MP4 / MOV / AVI / MKV / MP3 等，浏览器本地提取音轨（WebM）</span>
+    <span class="dz-sub">支持 MP4 / MOV / AVI / MKV / MP3 等，上传后由服务器 ffmpeg 提取音轨（MP3）</span>
     <input type="file" id="au-input" accept="video/*,audio/*" hidden>
   </div>
   <p class="fileinfo" id="au-info">尚未选择文件</p>
@@ -169,19 +167,6 @@ function body() {
   <div class="media-panel" data-panel="music" hidden>${sourcePanel()}</div>`;
 }
 
-/** 浏览器本地录制能力检测：不支持时给两个面板加提示 */
-function checkSupportBanner() {
-  let html = '';
-  const ok = recorderSupported()
-    && (!MediaRecorder.isTypeSupported
-      || MediaRecorder.isTypeSupported('video/webm')
-      || MediaRecorder.isTypeSupported('audio/webm'));
-  if (!ok) {
-    html = `<div class="banner warn">${icon('alert-triangle', 15)} 当前浏览器不支持本地录制（MediaRecorder），请使用最新版 Chrome / Edge。</div>`;
-  }
-  $('#au-warn').innerHTML = html;
-}
-
 /* ---------- 各子功能交互 ---------- */
 
 function bindExtract() {
@@ -212,21 +197,21 @@ function bindExtract() {
     try { range = readClipRange('#au-start', '#au-end'); }
     catch (e) { setStatus(status, 'err', e.message); return; }
 
-    setStatus(status, 'processing', '正在本地提取音频，请在预览中确认…');
+    setStatus(status, 'processing', '正在上传并提取音频，请稍候…');
     btn.disabled = true;
     result.innerHTML = '';
     if (resultUrl) { URL.revokeObjectURL(resultUrl); resultUrl = null; }
     try {
-      const { blob } = await extractAudio(file, range.start, range.end);
-      const fname = `${stripExt(file.name) || 'audio'}-音频.webm`;
+      const blob = await mediaApi.extractAudio(file, range.start, range.end);
+      const fname = `${stripExt(file.name) || 'audio'}-音频.mp3`;
       resultUrl = URL.createObjectURL(blob);
       result.innerHTML = `
         <audio controls src="${resultUrl}" style="width:100%"></audio>
         <div class="dl-row">
-          <a class="btn btn-primary" href="${resultUrl}" download="${fname}">下载音频（WebM）</a>
-          <span class="muted">已在本地完成，未上传服务器</span>
+          <a class="btn btn-primary" href="${resultUrl}" download="${fname}">下载音频（MP3）</a>
+          <span class="muted">由服务器 ffmpeg 提取完成</span>
         </div>`;
-      setStatus(status, 'ok', `提取完成：${fmtSize(blob.size)} WebM 音频，可在上方预览或下载`);
+      setStatus(status, 'ok', `提取完成：${fmtSize(blob.size)} MP3 音频，可在上方预览或下载`);
     } catch (e) {
       setStatus(status, 'err', e.message || '提取失败');
     } finally {
@@ -481,7 +466,6 @@ export default {
       });
     });
 
-    checkSupportBanner();
     bindExtract();
     bindClip();
     bindSource();

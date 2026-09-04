@@ -20,6 +20,28 @@ export const mediaApi = {
   },
 
   /**
+   * 上传本地视频，由后端 ffmpeg 提取音频（MP3），支持起止时间裁剪
+   * @param {File} file 视频文件
+   * @param {number|null} start 开始秒数（可选）
+   * @param {number|null} end 结束秒数（可选）
+   * @returns {Promise<Blob>} MP3 音频 Blob
+   */
+  extractAudio(file, start = null, end = null) {
+    const form = new FormData();
+    form.append('file', file);
+    if (start != null && !Number.isNaN(start)) form.append('start', String(start));
+    if (end != null && !Number.isNaN(end)) form.append('end', String(end));
+    return fetch(`${API}${API_BASE}/media/extract-audio`, { method: 'POST', body: form })
+      .then(async (r) => {
+        if (!r.ok) {
+          const data = await r.json().catch(() => ({}));
+          throw new Error(data.message || `提取失败（${r.status}）`);
+        }
+        return r.blob();
+      });
+  },
+
+  /**
    * 构造代理下载地址（直链常带防盗链/跨域限制，统一走后端代理）
    * @param {{url: string}} item 解析结果中的下载项
    * @param {string} filename 保存文件名（含扩展名）
