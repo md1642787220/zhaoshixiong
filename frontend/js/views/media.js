@@ -2,13 +2,13 @@
  * views/media.js - 音视频素材下载（合并页）
  * 三个子功能以标签页切换：
  *   1) 从视频提取音频：本地音视频文件 -> WebM 音频（浏览器本地录制）
- *   2) 视频素材下载：按起止时间本地截取 WebM 片段
+ *   2) 视频素材下载：视频源链接 -> 解析后下载视频
  *   3) 音频素材下载：视频源链接 -> 解析音频/视频下载
  *
- * 前两项完全在浏览器本地完成（MediaRecorder），无需后端 / ffmpeg。
+ * "从视频提取音频"完全在浏览器本地完成（MediaRecorder），无需后端 / ffmpeg。
  * ============================================================ */
 import { mediaApi } from '../api/media.js';
-import { extractAudio, clipVideo, recorderSupported } from '../utils/recorder.js';
+import { extractAudio, recorderSupported } from '../utils/recorder.js';
 import { toolPage } from './toolLayout.js';
 import { setupDropzone } from '../components/dropzone.js';
 import { icon } from '../components/icon.js';
@@ -65,24 +65,25 @@ function extractPanel() {
 function clipPanel() {
   return `
   <div id="vd-warn"></div>
-  <div class="dropzone" id="vd-drop">
-    <span class="dz-icon">${icon('scissors', 30)}${icon('film', 32)}</span>
-    <span class="dz-main">拖拽视频文件到此处，或点击选择</span>
-    <span class="dz-sub">支持 MP4 / MOV / AVI / MKV 等，按时间段本地截取为 WebM 片段</span>
-    <input type="file" id="vd-input" accept="video/*" hidden>
-  </div>
-  <p class="fileinfo" id="vd-info">尚未选择文件</p>
-  <div class="time-row">
-    <div class="field">
-      <label>开始时间（可留空）</label>
-      <input id="vd-start" class="input" placeholder="如 90 或 00:01:30">
+  <div class="music-form">
+    <label class="music-label" for="vd-input">视频源链接</label>
+    <div class="music-input-row">
+      <span class="music-input-icon">${icon('film', 18)}</span>
+      <input
+        type="text"
+        id="vd-input"
+        class="music-input"
+        placeholder="粘贴视频链接，解析后可下载不同清晰度视频"
+        autocomplete="off"
+        maxlength="500"
+      >
+      <button class="btn btn-primary" id="vd-btn">解析</button>
     </div>
-    <div class="field">
-      <label>结束时间（可留空）</label>
-      <input id="vd-end" class="input" placeholder="如 150 或 00:02:30">
-    </div>
+    <p class="music-hint muted">
+      支持 B 站、YouTube、抖音等主流平台链接，解析后选择需要的清晰度下载。
+    </p>
   </div>
-  <button class="btn btn-primary" id="vd-btn" disabled>截取视频片段（浏览器本地处理）</button>
+
   <div class="status" id="vd-status"></div>
   <div id="vd-preview"></div>`;
 }
@@ -114,7 +115,7 @@ function sourcePanel() {
 
 const TAB_DEFS = [
   { id: 'extract', name: '从视频提取音频', icon: 'music' },
-  { id: 'clip', name: '视频素材下载', icon: 'scissors' },
+  { id: 'clip', name: '视频素材下载', icon: 'film' },
   { id: 'music', name: '音频素材下载', icon: 'globe' },
 ];
 
@@ -141,7 +142,6 @@ function checkSupportBanner() {
     html = `<div class="banner warn">${icon('alert-triangle', 15)} 当前浏览器不支持本地录制（MediaRecorder），请使用最新版 Chrome / Edge。</div>`;
   }
   $('#au-warn').innerHTML = html;
-  $('#vd-warn').innerHTML = html;
 }
 
 /* ---------- 各子功能交互 ---------- */
@@ -191,47 +191,46 @@ function bindExtract() {
 }
 
 function bindClip() {
+  const input = $('#vd-input');
   const btn = $('#vd-btn');
   const status = $('#vd-status');
   const preview = $('#vd-preview');
-  let file = null;
-  let previewUrl = null;
 
-  setupDropzone($('#vd-drop'), $('#vd-input'), $('#vd-info'), (f) => {
-    file = f;
-    btn.disabled = false;
-    preview.innerHTML = '';
-    if (previewUrl) { URL.revokeObjectURL(previewUrl); previewUrl = null; }
-  });
-
-  btn.addEventListener('click', async () => {
-    if (!file) return;
-    const start = parseTimeInput($('#vd-start').value);
-    const end = parseTimeInput($('#vd-end').value);
-    if (start != null && end != null && end <= start) {
-      setStatus(status, 'err', '结束时间必须大于开始时间');
+  async function resolve() {
+    const url = input.value.trim();
+    if (!/^https?:\/\//i.test(url)) {
+      setStatus(status, 'err', '请输入以 http(s):// 开头的视频源链接');
+      preview.innerHTML = '';
+      input.focus();
       return;
     }
-    setStatus(status, 'processing', '正在本地截取片段（需播放完该时间段），请在预览中确认…');
-    btn.disabled = true;
+
+    setStatus(status, 'processing', '正在解析视频源，请稍候…');
     preview.innerHTML = '';
+    btn.disabled = true;
+
     try {
-      const { blob } = await clipVideo(file, start, end);
-      const fname = `${stripExt(file.name) || 'video'}-片段.webm`;
-      previewUrl = URL.createObjectURL(blob);
-      preview.innerHTML = `
-        <video controls src="${previewUrl}" style="width:100%;max-height:360px;background:#000;border-radius:10px"></video>
-        <div class="dl-row">
-          <a class="btn btn-primary" href="${previewUrl}" download="${fname}">下载片段（WebM）</a>
-          <span class="muted">已在本地完成，未上传服务器</span>
-        </div>`;
-      setStatus(status, 'ok', `截取完成：${fmtSize(blob.size)} WebM 视频，可在上方预览或下载`);
+      const data = await mediaApi.resolve(url);
+      const videos = data.videos || [];
+      if (!videos.length) {
+        setStatus(status, 'err', '该链接未解析到可下载的视频');
+        return;
+      }
+      setStatus(status, 'ok', `解析完成：视频 ${videos.length} 项，点击即可下载`);
+      preview.innerHTML = renderVideoResult(data);
     } catch (e) {
-      setStatus(status, 'err', e.message || '截取失败');
+      setStatus(status, 'err', e.message || '解析失败，请稍后重试');
+      preview.innerHTML = '';
     } finally {
       btn.disabled = false;
     }
+  }
+
+  btn.addEventListener('click', resolve);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') resolve();
   });
+  input.focus();
 }
 
 /* ---------- 音频素材下载：视频源链接解析 ---------- */
@@ -280,6 +279,42 @@ function renderSourceResult(data) {
         <div class="ms-group-title">${icon('film', 15)} 视频下载</div>
         ${list(data.videos, 'video')}
       </div>` : ''}
+  </div>`;
+}
+
+/** 渲染视频解析结果：只展示视频下载项 */
+function renderVideoResult(data) {
+  const meta = [
+    data.uploader ? `作者：${data.uploader}` : '',
+    data.duration ? `时长：${fmtDuration(data.duration)}` : '',
+  ].filter(Boolean).join(' · ');
+
+  const list = (data.videos || []).map(it => `
+    <a
+      class="ms-dl-item"
+      href="${mediaApi.downloadUrl(it, `${safeName(data.title)}.${it.ext}`, data.pageUrl)}"
+      download
+      target="_blank"
+      rel="noopener"
+    >
+      ${icon('film', 16)}
+      <span class="ms-dl-label">${it.label}</span>
+      <span class="ms-dl-go">${icon('download', 16)}</span>
+    </a>`).join('');
+
+  return `
+  <div class="ms-result-card">
+    <div class="ms-result-head">
+      ${data.thumbnail ? `<img class="ms-thumb" src="${data.thumbnail}" alt="" loading="lazy" onerror="this.remove()">` : ''}
+      <div class="ms-result-info">
+        <h3 class="ms-title">${data.title || '未命名素材'}</h3>
+        ${meta ? `<p class="ms-meta muted">${meta}</p>` : ''}
+      </div>
+    </div>
+    <div class="ms-group">
+      <div class="ms-group-title">${icon('film', 15)} 视频下载</div>
+      ${list}
+    </div>
   </div>`;
 }
 
