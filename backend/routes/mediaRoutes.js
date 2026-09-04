@@ -28,7 +28,7 @@ function createMediaRoutes({ mediaSourceService, logger }) {
 
   /** 下载代理：流式转发 worker 响应，浏览器拿到的即为文件流 */
   router.get('/download', asyncHandler(async (req, res) => {
-    const { url, ref, filename } = req.query;
+    const { url, ref, filename, start, end } = req.query;
     if (!url || !URL_RE.test(String(url))) throw new BadRequestError('非法下载地址');
 
     const base = mediaSourceService.workerBase;
@@ -36,6 +36,8 @@ function createMediaRoutes({ mediaSourceService, logger }) {
 
     const qs = new URLSearchParams({ url: String(url), filename: String(filename || 'download') });
     if (ref) qs.set('ref', String(ref));
+    if (start != null && start !== '') qs.set('start', String(start));
+    if (end != null && end !== '') qs.set('end', String(end));
 
     const workerRes = await fetch(`${base}/api/media/download?${qs.toString()}`);
     if (!workerRes.ok) {

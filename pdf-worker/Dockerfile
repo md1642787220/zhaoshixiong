@@ -9,7 +9,7 @@ FROM python:3.11-slim
 RUN sed -i 's|deb.debian.org|mirrors.tuna.tsinghua.edu.cn|g; s|security.debian.org|mirrors.tuna.tsinghua.edu.cn|g' \
     /etc/apt/sources.list.d/debian.sources
 
-# 系统依赖：LibreOffice（Office 互转）、Tesseract（OCR）、字体（中文）
+# 系统依赖：LibreOffice（Office 互转）、Tesseract（OCR）、字体（中文）、ffmpeg（音视频剪辑）
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libreoffice \
     tesseract-ocr \
@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-wqy-zenhei \
     fonts-wqy-microhei \
     poppler-utils \
+    ffmpeg \
  && rm -rf /var/lib/apt/lists/*
 
 # 安装 uv（pip 方式，使用国内镜像）

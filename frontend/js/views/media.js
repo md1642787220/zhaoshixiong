@@ -35,6 +35,50 @@ function parseTimeInput(v) {
   return v.split(':').reduce((acc, x) => acc * 60 + parseFloat(x), 0);
 }
 
+/** 读取剪辑输入框原始值（不校验大小关系） */
+function readClipValues(startId, endId) {
+  return {
+    start: parseTimeInput($(startId).value),
+    end: parseTimeInput($(endId).value),
+  };
+}
+
+/** 读取并校验剪辑起止时间 */
+function readClipRange(startId, endId) {
+  const { start, end } = readClipValues(startId, endId);
+  if (start != null && end != null && end <= start) {
+    throw new Error('结束时间必须大于开始时间');
+  }
+  return { start, end };
+}
+
+/** 从解析出的视频列表里挑一个适合预览的直链 */
+function pickPreviewUrl(videos) {
+  if (!videos || !videos.length) return '';
+  const playable = videos.find((it) => it.hasAudio && it.height && it.height <= 1080) || videos[0];
+  return playable ? playable.url : '';
+}
+
+/** 剪辑时间输入控件 HTML */
+function clipInputs(prefix) {
+  return `
+  <div class="time-row">
+    <div class="field">
+      <label>开始时间（可留空，提取整段）</label>
+      <input id="${prefix}-start" class="input" placeholder="如 90 或 00:01:30">
+    </div>
+    <div class="field">
+      <label>结束时间（可留空）</label>
+      <input id="${prefix}-end" class="input" placeholder="如 150 或 00:02:30">
+    </div>
+  </div>`;
+}
+
+/** 视频预览区 HTML */
+function previewArea(id) {
+  return `<div class="media-preview-wrap"><video id="${id}" class="media-preview" controls playsinline hidden></video></div>`;
+}
+
 /* ---------- 子面板 HTML ---------- */
 
 function extractPanel() {
@@ -47,19 +91,11 @@ function extractPanel() {
     <input type="file" id="au-input" accept="video/*,audio/*" hidden>
   </div>
   <p class="fileinfo" id="au-info">尚未选择文件</p>
-  <div class="time-row">
-    <div class="field">
-      <label>开始时间（可留空，提取整段）</label>
-      <input id="au-start" class="input" placeholder="如 90 或 00:01:30">
-    </div>
-    <div class="field">
-      <label>结束时间（可留空）</label>
-      <input id="au-end" class="input" placeholder="如 150 或 00:02:30">
-    </div>
-  </div>
+  ${previewArea('au-video')}
+  ${clipInputs('au')}
   <button class="btn btn-primary" id="au-btn" disabled>提取音频（浏览器本地处理）</button>
   <div class="status" id="au-status"></div>
-  <div id="au-preview"></div>`;
+  <div id="au-result"></div>`;
 }
 
 function clipPanel() {
@@ -73,19 +109,20 @@ function clipPanel() {
         type="text"
         id="vd-input"
         class="music-input"
-        placeholder="粘贴视频链接，解析后可下载不同清晰度视频"
+        placeholder="粘贴视频链接，解析后可预览并下载片段"
         autocomplete="off"
         maxlength="500"
       >
       <button class="btn btn-primary" id="vd-btn">解析</button>
     </div>
     <p class="music-hint muted">
-      支持 B 站、YouTube、抖音等主流平台链接，解析后选择需要的清晰度下载。
+      支持 B 站、YouTube、抖音等主流平台链接，解析后预览并选择时间段下载。
     </p>
   </div>
-
+  ${previewArea('vd-video')}
+  ${clipInputs('vd')}
   <div class="status" id="vd-status"></div>
-  <div id="vd-preview"></div>`;
+  <div id="vd-result"></div>`;
 }
 
 function sourcePanel() {
@@ -98,7 +135,7 @@ function sourcePanel() {
         type="text"
         id="ms-input"
         class="music-input"
-        placeholder="粘贴视频源链接，解析后可下载音频与视频"
+        placeholder="粘贴视频源链接，解析后可下载音频/视频片段"
         autocomplete="off"
         maxlength="500"
       >
@@ -108,7 +145,8 @@ function sourcePanel() {
       支持各视频平台链接，粘贴后点击解析，即可获取该素材的音频与视频下载地址。
     </p>
   </div>
-
+  ${previewArea('ms-video')}
+  ${clipInputs('ms')}
   <div class="status" id="ms-status"></div>
   <div id="ms-result"></div>`;
 }
@@ -149,36 +187,43 @@ function checkSupportBanner() {
 function bindExtract() {
   const btn = $('#au-btn');
   const status = $('#au-status');
-  const preview = $('#au-preview');
+  const result = $('#au-result');
+  const video = $('#au-video');
   let file = null;
-  let previewUrl = null;
+  let fileUrl = null;
+  let resultUrl = null;
 
   setupDropzone($('#au-drop'), $('#au-input'), $('#au-info'), (f) => {
     file = f;
     btn.disabled = false;
-    preview.innerHTML = '';
-    if (previewUrl) { URL.revokeObjectURL(previewUrl); previewUrl = null; }
+    result.innerHTML = '';
+    if (resultUrl) { URL.revokeObjectURL(resultUrl); resultUrl = null; }
+    const oldUrl = fileUrl;
+    fileUrl = URL.createObjectURL(f);
+    video.src = fileUrl;
+    video.hidden = false;
+    video.load();
+    if (oldUrl) URL.revokeObjectURL(oldUrl);
   });
 
   btn.addEventListener('click', async () => {
     if (!file) return;
-    const start = parseTimeInput($('#au-start').value);
-    const end = parseTimeInput($('#au-end').value);
-    if (start != null && end != null && end <= start) {
-      setStatus(status, 'err', '结束时间必须大于开始时间');
-      return;
-    }
+    let range;
+    try { range = readClipRange('#au-start', '#au-end'); }
+    catch (e) { setStatus(status, 'err', e.message); return; }
+
     setStatus(status, 'processing', '正在本地提取音频，请在预览中确认…');
     btn.disabled = true;
-    preview.innerHTML = '';
+    result.innerHTML = '';
+    if (resultUrl) { URL.revokeObjectURL(resultUrl); resultUrl = null; }
     try {
-      const { blob } = await extractAudio(file, start, end);
+      const { blob } = await extractAudio(file, range.start, range.end);
       const fname = `${stripExt(file.name) || 'audio'}-音频.webm`;
-      previewUrl = URL.createObjectURL(blob);
-      preview.innerHTML = `
-        <audio controls src="${previewUrl}" style="width:100%"></audio>
+      resultUrl = URL.createObjectURL(blob);
+      result.innerHTML = `
+        <audio controls src="${resultUrl}" style="width:100%"></audio>
         <div class="dl-row">
-          <a class="btn btn-primary" href="${previewUrl}" download="${fname}">下载音频（WebM）</a>
+          <a class="btn btn-primary" href="${resultUrl}" download="${fname}">下载音频（WebM）</a>
           <span class="muted">已在本地完成，未上传服务器</span>
         </div>`;
       setStatus(status, 'ok', `提取完成：${fmtSize(blob.size)} WebM 音频，可在上方预览或下载`);
@@ -194,19 +239,30 @@ function bindClip() {
   const input = $('#vd-input');
   const btn = $('#vd-btn');
   const status = $('#vd-status');
-  const preview = $('#vd-preview');
+  const result = $('#vd-result');
+  const video = $('#vd-video');
+  let resolved = null;
+
+  function render() {
+    if (!resolved) return;
+    const { start, end } = readClipValues('#vd-start', '#vd-end');
+    result.innerHTML = renderVideoResult(resolved, start, end);
+  }
 
   async function resolve() {
     const url = input.value.trim();
     if (!/^https?:\/\//i.test(url)) {
       setStatus(status, 'err', '请输入以 http(s):// 开头的视频源链接');
-      preview.innerHTML = '';
+      result.innerHTML = '';
       input.focus();
       return;
     }
 
     setStatus(status, 'processing', '正在解析视频源，请稍候…');
-    preview.innerHTML = '';
+    result.innerHTML = '';
+    video.hidden = true;
+    video.src = '';
+    resolved = null;
     btn.disabled = true;
 
     try {
@@ -216,16 +272,28 @@ function bindClip() {
         setStatus(status, 'err', '该链接未解析到可下载的视频');
         return;
       }
-      setStatus(status, 'ok', `解析完成：视频 ${videos.length} 项，点击即可下载`);
-      preview.innerHTML = renderVideoResult(data);
+      resolved = data;
+      const previewUrl = pickPreviewUrl(videos);
+      if (previewUrl) {
+        video.src = previewUrl;
+        video.hidden = false;
+        video.load();
+        video.onerror = () => {
+          video.hidden = true;
+          setStatus(status, 'warn', '当前链接不支持在线预览，可直接下载');
+        };
+      }
+      render();
+      setStatus(status, 'ok', `解析完成：视频 ${videos.length} 项，选择时间段后点击下载`);
     } catch (e) {
       setStatus(status, 'err', e.message || '解析失败，请稍后重试');
-      preview.innerHTML = '';
     } finally {
       btn.disabled = false;
     }
   }
 
+  $('#vd-start').addEventListener('input', render);
+  $('#vd-end').addEventListener('input', render);
   btn.addEventListener('click', resolve);
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') resolve();
@@ -241,16 +309,20 @@ function safeName(name) {
 }
 
 /** 渲染解析结果：素材信息 + 音频/视频两组下载项 */
-function renderSourceResult(data) {
+function renderSourceResult(data, start = null, end = null) {
   const meta = [
     data.uploader ? `作者：${data.uploader}` : '',
     data.duration ? `时长：${fmtDuration(data.duration)}` : '',
   ].filter(Boolean).join(' · ');
 
+  const clipNote = (start != null || end != null)
+    ? `<p class="ms-clip-note muted">已设置下载片段：${fmtDuration(start || 0)} - ${end != null ? fmtDuration(end) : '结束'}</p>`
+    : '';
+
   const list = (items, kind) => (items || []).map(it => `
     <a
       class="ms-dl-item"
-      href="${mediaApi.downloadUrl(it, `${safeName(data.title)}.${it.ext}`, data.pageUrl)}"
+      href="${mediaApi.downloadUrl(it, `${safeName(data.title)}.${it.ext}`, data.pageUrl, start, end)}"
       download
       target="_blank"
       rel="noopener"
@@ -269,6 +341,7 @@ function renderSourceResult(data) {
         ${meta ? `<p class="ms-meta muted">${meta}</p>` : ''}
       </div>
     </div>
+    ${clipNote}
     ${(data.audios || []).length ? `
       <div class="ms-group">
         <div class="ms-group-title">${icon('music', 15)} 音频下载</div>
@@ -283,16 +356,20 @@ function renderSourceResult(data) {
 }
 
 /** 渲染视频解析结果：只展示视频下载项 */
-function renderVideoResult(data) {
+function renderVideoResult(data, start = null, end = null) {
   const meta = [
     data.uploader ? `作者：${data.uploader}` : '',
     data.duration ? `时长：${fmtDuration(data.duration)}` : '',
   ].filter(Boolean).join(' · ');
 
+  const clipNote = (start != null || end != null)
+    ? `<p class="ms-clip-note muted">已设置下载片段：${fmtDuration(start || 0)} - ${end != null ? fmtDuration(end) : '结束'}</p>`
+    : '';
+
   const list = (data.videos || []).map(it => `
     <a
       class="ms-dl-item"
-      href="${mediaApi.downloadUrl(it, `${safeName(data.title)}.${it.ext}`, data.pageUrl)}"
+      href="${mediaApi.downloadUrl(it, `${safeName(data.title)}.${it.ext}`, data.pageUrl, start, end)}"
       download
       target="_blank"
       rel="noopener"
@@ -311,6 +388,7 @@ function renderVideoResult(data) {
         ${meta ? `<p class="ms-meta muted">${meta}</p>` : ''}
       </div>
     </div>
+    ${clipNote}
     <div class="ms-group">
       <div class="ms-group-title">${icon('film', 15)} 视频下载</div>
       ${list}
@@ -323,6 +401,14 @@ function bindSource() {
   const btn = $('#ms-btn');
   const status = $('#ms-status');
   const result = $('#ms-result');
+  const video = $('#ms-video');
+  let resolved = null;
+
+  function render() {
+    if (!resolved) return;
+    const { start, end } = readClipValues('#ms-start', '#ms-end');
+    result.innerHTML = renderSourceResult(resolved, start, end);
+  }
 
   /** 解析：校验 → 请求 → 渲染 */
   async function resolve() {
@@ -336,6 +422,9 @@ function bindSource() {
 
     setStatus(status, 'processing', '正在解析视频源，请稍候…');
     result.innerHTML = '';
+    video.hidden = true;
+    video.src = '';
+    resolved = null;
     btn.disabled = true;
 
     try {
@@ -346,16 +435,28 @@ function bindSource() {
         setStatus(status, 'err', '该链接未解析到可下载的音频或视频');
         return;
       }
-      setStatus(status, 'ok', `解析完成：音频 ${audios.length} 项 / 视频 ${videos.length} 项，点击即可下载`);
-      result.innerHTML = renderSourceResult(data);
+      resolved = data;
+      const previewUrl = pickPreviewUrl(videos.length ? videos : []);
+      if (previewUrl) {
+        video.src = previewUrl;
+        video.hidden = false;
+        video.load();
+        video.onerror = () => {
+          video.hidden = true;
+          setStatus(status, 'warn', '当前链接不支持在线预览，可直接下载');
+        };
+      }
+      render();
+      setStatus(status, 'ok', `解析完成：音频 ${audios.length} 项 / 视频 ${videos.length} 项，选择时间段后点击下载`);
     } catch (e) {
       setStatus(status, 'err', e.message || '解析失败，请稍后重试');
-      result.innerHTML = '';
     } finally {
       btn.disabled = false;
     }
   }
 
+  $('#ms-start').addEventListener('input', render);
+  $('#ms-end').addEventListener('input', render);
   btn.addEventListener('click', resolve);
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') resolve();

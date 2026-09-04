@@ -329,15 +329,78 @@ async def media_resolve(request: Request):
     }
 
 
+async def _download_section(page_url, start, end, filename):
+    """使用 yt-dlp 按起止时间下载片段（需要 ffmpeg 合并分片）。"""
+    import tempfile, os, shutil, yt_dlp
+    tmpdir = tempfile.mkdtemp()
+    out_tpl = os.path.join(tmpdir, "clip.%(ext)s")
+    loop = asyncio.get_running_loop()
+
+    def run():
+        opts = {
+            "quiet": True,
+            "no_warnings": True,
+            "noplaylist": True,
+            "socket_timeout": 20,
+            "http_headers": {"User-Agent": _UA},
+            "download_sections": [f"*{start}-{end}"],
+            "force_keyframes_at_cuts": True,
+            "outtmpl": out_tpl,
+        }
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            ydl.download([page_url])
+        files = [f for f in os.listdir(tmpdir) if f.startswith("clip.")]
+        if not files:
+            raise RuntimeError("剪辑未生成文件")
+        return os.path.join(tmpdir, files[0])
+
+    try:
+        path = await loop.run_in_executor(None, run)
+    except Exception as e:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+        raise e
+
+    mime = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+    cd = f"attachment; filename*=UTF-8''{quote(filename)}"
+
+    async def iter_file():
+        with open(path, "rb") as f:
+            while True:
+                chunk = f.read(256 * 1024)
+                if not chunk:
+                    break
+                yield chunk
+        os.remove(path)
+        os.rmdir(tmpdir)
+
+    return StreamingResponse(iter_file(), media_type=mime, headers={"Content-Disposition": cd})
+
+
 @app.get("/api/media/download")
 async def media_download(
     url: str = Query(...),
     ref: str = Query(""),
     filename: str = Query("download"),
+    start: str = Query(""),
+    end: str = Query(""),
 ):
-    """流式代理下载媒体文件，规避浏览器直连的跨域与防盗链限制。"""
+    """流式代理下载媒体文件；支持 start/end 时按时间段裁剪（依赖 ffmpeg）。"""
     if not _URL_RE.match(url):
         return JSONResponse(status_code=400, content={"ok": False, "message": "非法下载地址"})
+
+    has_section = start not in ("", None) and end not in ("", None)
+    if has_section:
+        try:
+            s = float(start)
+            e = float(end)
+        except ValueError:
+            return JSONResponse(status_code=400, content={"ok": False, "message": "开始/结束时间必须是数字"})
+        if s < 0 or e <= s:
+            return JSONResponse(status_code=400, content={"ok": False, "message": "结束时间必须大于开始时间"})
+        try:
+            return await _download_section(ref or url, s, e, filename)
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"ok": False, "message": f"剪辑失败：{str(e)}"})
 
     import httpx
     headers = {"User-Agent": _UA}

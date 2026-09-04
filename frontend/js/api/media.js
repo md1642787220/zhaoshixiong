@@ -24,13 +24,17 @@ export const mediaApi = {
    * @param {{url: string}} item 解析结果中的下载项
    * @param {string} filename 保存文件名（含扩展名）
    * @param {string} pageRef 来源页面地址（作 Referer）
+   * @param {number|null} start 片段开始秒数（可选）
+   * @param {number|null} end 片段结束秒数（可选）
    */
-  downloadUrl(item, filename, pageRef = '') {
+  downloadUrl(item, filename, pageRef = '', start = null, end = null) {
     const qs = new URLSearchParams({
       url: item.url,
       filename,
     });
     if (pageRef) qs.set('ref', pageRef);
+    if (start != null && !Number.isNaN(start)) qs.set('start', String(start));
+    if (end != null && !Number.isNaN(end)) qs.set('end', String(end));
     return `${API}${API_BASE}/media/download?${qs.toString()}`;
   },
 };

@@ -86,6 +86,8 @@ export function setStatus(el, state, msg) {
     el.textContent = msg || '处理完成';
   } else if (state === 'err') {
     el.textContent = msg || '处理失败';
+  } else if (state === 'warn') {
+    el.textContent = msg || '请注意';
   } else {
     el.textContent = '';
   }

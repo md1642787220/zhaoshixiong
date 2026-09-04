@@ -117,6 +117,7 @@ textarea.input { resize: vertical; line-height: 1.65; }
 .status { margin-top: 16px; font-size: 13.5px; min-height: 20px; }
 .status.ok { color: var(--success); }
 .status.err { color: var(--danger); }
+.status.warn { color: #d97706; }
 .status.processing { color: var(--primary-700); }
 .spinner {
   display: inline-block; width: 14px; height: 14px;
