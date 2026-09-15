@@ -283,26 +283,54 @@ async function extractImages(buf) {
 async function watermark(buf, opts) {
   const doc = await PDFDocument.load(buf, { ignoreEncryption: true });
   doc.registerFontkit(fontkit);
-  const cjk = await getCjkFont(doc);
-  const font = cjk || await doc.embedFont(StandardFonts.Helvetica);
   const count = doc.getPageCount();
   const opacity = (parseInt(opts.opacity, 10) || 30) / 100;
   if (opts.type === 'text') {
+    // 仅文字水印需要中文字体（图片水印无需嵌入字体，避免体积巨大）
+    const cjk = await getCjkFont(doc);
+    const font = cjk || await doc.embedFont(StandardFonts.Helvetica);
     const fs_ = parseInt(opts.size, 10) || 24;
+    const text = String(opts.text || '').trim() || '内部资料'; // 兜底，避免空文本导致引擎报错
     doc.getPages().forEach((p, i) => {
       if (opts.pages === 'first' && i !== 0) return;
       if (opts.pages === 'custom' && !pageInRange(i + 1, opts.pageRange)) return;
       const { width, height } = p.getSize();
       if (opts.place === 'tile') {
         for (let y = 40; y < height; y += fs_ * 3)
-          for (let x = 20; x < width; x += font.widthOfTextAtSize(opts.text, fs_) + 60)
-            p.drawText(opts.text, { x, y, size: fs_, font, color: rgb(0.5, 0.5, 0.5), opacity });
+          for (let x = 20; x < width; x += font.widthOfTextAtSize(text, fs_) + 60)
+            p.drawText(text, { x, y, size: fs_, font, color: rgb(0.5, 0.5, 0.5), opacity });
       } else {
-        let x = width / 2 - font.widthOfTextAtSize(opts.text, fs_) / 2;
+        let x = width / 2 - font.widthOfTextAtSize(text, fs_) / 2;
         let y = height / 2;
         if (opts.place === 'top') y = height - 40;
         if (opts.place === 'bottom') y = 30;
-        p.drawText(opts.text, { x, y, size: fs_, font, color: rgb(0.5, 0.5, 0.5), opacity, rotate: degrees(30) });
+        p.drawText(text, { x, y, size: fs_, font, color: rgb(0.5, 0.5, 0.5), opacity, rotate: degrees(30) });
+      }
+    });
+  } else if (opts.imageBuf) {
+    // 图片水印：pdf-lib embedPng / embedJpg + drawImage（与 addStamp 同机制）
+    const img = opts.imageBuf;
+    const isPng = img.slice(1, 4).toString() === 'PNG';
+    const embedded = isPng ? await doc.embedPng(img) : await doc.embedJpg(img);
+    const scalePct = (parseInt(opts.imageScale, 10) || 30) / 100;
+    doc.getPages().forEach((p, i) => {
+      if (opts.pages === 'first' && i !== 0) return;
+      if (opts.pages === 'custom' && !pageInRange(i + 1, opts.pageRange)) return;
+      const { width, height } = p.getSize();
+      const w = width * scalePct;
+      const h = (embedded.height / embedded.width) * w;
+      if (opts.place === 'tile') {
+        for (let y = h / 2; y < height; y += h * 1.6) {
+          for (let x = w / 2; x < width; x += w * 1.4) {
+            p.drawImage(embedded, { x, y, width: w, height: h, opacity, rotate: degrees(30) });
+          }
+        }
+      } else {
+        let x = (width - w) / 2;
+        let y = (height - h) / 2;
+        if (opts.place === 'top') y = height - h - 30;
+        if (opts.place === 'bottom') y = 30;
+        p.drawImage(embedded, { x, y, width: w, height: h, opacity, rotate: degrees(30) });
       }
     });
   }

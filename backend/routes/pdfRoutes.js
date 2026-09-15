@@ -17,7 +17,7 @@ const { BadRequestError } = require('../core/errors');
 function createPdfRoutes({ pdfService, storage, logger }) {
   const router = express.Router();
 
-  /** 能力清单：前端据此给「暂未开放」的功能打角标 */
+  /** 能力清单：前端据此标注「未开放」/「需服务端支持」 */
   router.get('/capabilities', (req, res) => {
     res.json({ ok: true, capabilities: pdfService.capabilities() });
   });

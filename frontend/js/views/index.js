@@ -8,10 +8,10 @@ import homeView from './home.js';
 import toolsView from './tools.js';
 import mediaView from './media.js';
 import handwritingView from './handwriting.js';
+import idphotoView from './idphoto.js';
 import learnView from './learn.js';
 import categoryView from './category.js';
 import postView from './post.js';
-import pdfView from './pdf.js';
 import pdfToolView from './pdfTool.js';
 import navView from './nav.js';
 
@@ -21,10 +21,11 @@ export const views = [
   { path: '/tools', view: toolsView },
   { path: '/tools/media', view: mediaView },
   { path: '/tools/handwriting', view: handwritingView },
+  { path: '/tools/idphoto', view: idphotoView },
   { path: '/learn', view: learnView },
   { path: '/learn/:id', view: categoryView },
   { path: '/learn/:id/post', view: postView },
-  { path: '/pdf', view: pdfView },
+  { path: '/pdf', view: pdfToolView },
   { path: '/pdf/:toolId', view: pdfToolView },
   { path: '/nav', view: navView },
 ];

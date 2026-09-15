@@ -68,6 +68,35 @@ const ENGINE_LABELS = {
   'render-page': 'PyMuPDF（PDF 页面渲染为图片）',
 };
 
+/**
+ * 由 Python pdf-worker 实现的 action（见 pdf-worker/worker/*.py 的 @register）。
+ * 这些功能「已实现」，只是需要服务端部署并配置 PDF_WORKER_URL 才可运行，
+ * 因此不能因为 worker 未启用就当作「未开放」。
+ */
+const WORKER_ACTIONS = new Set([
+  // page
+  'merge', 'split', 'rotate', 'auto-rotate', 'extract-pages', 'reorganize',
+  'page-numbers', 'remove-pages', 'remove-blanks', 'crop', 'page-layout', 'single-large-page',
+  // convert
+  'to-pdf', 'to-pdfa', 'to-image', 'image-to-pdf', 'render-page',
+  'markdown-to-pdf', 'convert-office', 'html-to-pdf', 'to-presentation',
+  // security
+  'add-password', 'remove-password', 'change-permissions', 'sign', 'cert-sign',
+  'remove-cert-sign', 'validate-signature', 'watermark', 'sanitize', 'redact', 'timestamp',
+  // edit
+  'add-attachments', 'add-stamp', 'extract-images', 'change-metadata', 'remove-annotations',
+  'replace-color', 'pdf-info', 'text-editor', 'toc', 'flatten',
+  // advanced
+  'overlay', 'booklet', 'adjust-scale', 'adjust-contrast', 'auto-rename',
+  'show-js', 'scanner-split', 'repair', 'unlock-forms',
+  // other
+  'ocr', 'compare', 'read-annotate', 'inspect-structure', 'export-xml',
+  'edit-bookmarks', 'replace-fonts', 'remove-actions',
+]);
+
+/** 已登记但尚未真正实现的 action（worker 处理时直接返回 501） */
+const NOT_IMPLEMENTED = new Set(['html-to-pdf', 'to-presentation']);
+
 const toBool = (s) => s === '1' || s === true || s === 'true';
 
 /**
@@ -75,18 +104,24 @@ const toBool = (s) => s === '1' || s === true || s === 'true';
  * @param {{pdfEngine: object, workerClient: object, storage: object, logger: object}} deps
  */
 function createPdfService({ pdfEngine, workerClient, storage, logger } = {}) {
-  /** 能力清单：前端据此给「暂未开放」的功能打角标 */
+  /**
+   * 能力清单：前端据此标注工具状态。
+   *   implemented  代码层面是否已实现（Node 直连或 pdf-worker）
+   *   available    当前环境是否可直接运行（worker 类需已部署并启用）
+   *   needsWorker  是否依赖 pdf-worker 引擎
+   */
   function capabilities() {
     const capabilitiesMap = {};
     for (const a of PLANNED) {
-      if (!ENGINE_ACTIONS.has(a)) {
-        capabilitiesMap[a] = { available: true, source: 'node' };
-      } else {
-        capabilitiesMap[a] = {
-          available: Boolean(workerClient?.enabled),
-          source: workerClient?.enabled ? 'worker' : 'unavailable',
-        };
-      }
+      const nodeImpl = !ENGINE_ACTIONS.has(a);
+      const workerImpl = WORKER_ACTIONS.has(a);
+      const implemented = !NOT_IMPLEMENTED.has(a) && (nodeImpl || workerImpl);
+      capabilitiesMap[a] = {
+        available: implemented && (nodeImpl || Boolean(workerClient?.enabled)),
+        implemented,
+        needsWorker: !nodeImpl && workerImpl,
+        source: !implemented ? 'unavailable' : (nodeImpl ? 'node' : 'worker'),
+      };
     }
     return capabilitiesMap;
   }
@@ -161,8 +196,15 @@ function createPdfService({ pdfEngine, workerClient, storage, logger } = {}) {
         if (!items.length) return { kind: 'json', data: { ok: false, message: '未找到内嵌图片' } };
         return { kind: 'zip', items, zipName: 'images.zip' };
       }
-      case 'watermark':
-        return { kind: 'pdf', buffer: await P.watermark(files[0], body), filename: 'watermarked.pdf' };
+      case 'watermark': {
+        // 图片水印：读取参数图片并交给引擎（与 add-stamp 同机制）
+        const wmImg = storage.readParamFile(req, 'watermarkImage');
+        return {
+          kind: 'pdf',
+          buffer: await P.watermark(files[0], { ...body, imageBuf: wmImg ? wmImg.buffer : null }),
+          filename: 'watermarked.pdf',
+        };
+      }
       case 'add-stamp': {
         const stamp = storage.readParamFile(req, 'stamp');
         if (!stamp) throw new BadRequestError('请上传印章图片');

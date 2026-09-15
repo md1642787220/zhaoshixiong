@@ -158,10 +158,10 @@ export const PDF_TOOLS = [
     id: 'crop', name: '裁剪页面', cat: 'page', icon: 'crop',
     desc: '按边距裁剪 PDF 页面', action: 'crop', multi: false,
     params: [
-      { type: 'number', name: 'top', label: '上边距 (mm)', value: 0 },
-      { type: 'number', name: 'bottom', label: '下边距 (mm)', value: 0 },
-      { type: 'number', name: 'left', label: '左边距 (mm)', value: 0 },
-      { type: 'number', name: 'right', label: '右边距 (mm)', value: 0 },
+      { type: 'number', name: 'top', label: '上边距 (mm)', value: 0, min: 0, max: 300, step: 1 },
+      { type: 'number', name: 'bottom', label: '下边距 (mm)', value: 0, min: 0, max: 300, step: 1 },
+      { type: 'number', name: 'left', label: '左边距 (mm)', value: 0, min: 0, max: 300, step: 1 },
+      { type: 'number', name: 'right', label: '右边距 (mm)', value: 0, min: 0, max: 300, step: 1 },
     ],
   },
   {
@@ -224,7 +224,7 @@ export const PDF_TOOLS = [
       { type: 'range', name: 'y', label: '垂直位置 (%)', min: 0, max: 90, step: 1, value: 10 },
       { type: 'range', name: 'scale', label: '大小 (%)', min: 5, max: 50, step: 1, value: 20 },
     ],
-    hint: '先上传 PDF 与签名，再点「加载页面预览」，即可在预览图上直接拖动签名；下方滑块会同步。',
+    hint: '上传 PDF 与签名后会自动加载页面预览，可直接在中间预览区拖动签名调整位置；拖动右下角小方块或在签名上滚动滚轮调整大小。',
   },
   {
     id: 'cert-sign', name: '证书签名', cat: 'security', icon: 'certificate',
@@ -252,10 +252,12 @@ export const PDF_TOOLS = [
     desc: '添加文字或图片水印（防泄密）', action: 'watermark', multi: false,
     params: [
       { type: 'select', name: 'type', label: '水印类型', options: [['text', '文字'], ['image', '图片']] },
-      { type: 'text', name: 'text', label: '水印文字', placeholder: '内部资料 请勿外传', when: { type: 'text' } },
+      { type: 'text', name: 'text', label: '水印文字', placeholder: '内部资料 请勿外传', when: { type: 'text' }, required: true },
+      { type: 'file', name: 'watermarkImage', label: '水印图片', accept: '.png,.jpg,.jpeg', when: { type: 'image' }, required: true },
       { type: 'select', name: 'place', label: '位置', options: [['center', '居中'], ['tile', '平铺'], ['top', '顶部'], ['bottom', '底部']] },
       { type: 'range', name: 'opacity', label: '透明度 (%)', min: 5, max: 100, step: 5, value: 30 },
       { type: 'range', name: 'size', label: '字号', min: 8, max: 80, step: 2, value: 24, when: { type: 'text' } },
+      { type: 'range', name: 'imageScale', label: '图片大小 (%)', min: 10, max: 100, step: 5, value: 30, when: { type: 'image' } },
       { type: 'select', name: 'pages', label: '应用范围', options: [['all', '全部页面'], ['first', '仅首页'], ['custom', '自定义页码']] },
       { type: 'text', name: 'pageRange', label: '页码（自定义时填写）', placeholder: '如 1-3', when: { pages: 'custom' } },
     ],

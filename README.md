@@ -90,8 +90,38 @@ npm start
 
 启动后访问：<http://localhost:3000>
 
+> **PDF Worker 会自动启动**：未配置 `PDF_WORKER_URL` 时，Node 后端启动会一并拉起本地
+> `pdf-worker`（Python 服务，默认 <http://127.0.0.1:8000>），日志中会看到 `本地 PDF Worker 已就绪`。
+> 首次使用需先安装其依赖：
+>
+> ```bash
+> cd pdf-worker
+> python -m venv .venv
+> .venv\Scripts\activate            # Windows（macOS/Linux: source .venv/bin/activate）
+> pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+> ```
+>
+> 若已单独部署 worker（或使用 docker compose），自动启动会自动跳过；也可用
+> `PDF_WORKER_AUTOSTART=false` 显式关闭。若目标端口已有健康 worker，会自动复用而非重复启动。
+
 > 音频提取 / 视频提取需要服务器安装 [ffmpeg](https://ffmpeg.org/download.html) 并加入 PATH；
 > 未安装时其余功能不受影响，相关工具页会显示友好提示。
+
+### 环境变量（后端）
+
+| 变量 | 默认 | 说明 |
+|------|------|------|
+| `PORT` | `3000` | 后端端口 |
+| `HOST` | `::` | 监听地址（双栈，兼容 IPv4/IPv6） |
+| `PDF_WORKER_URL` | 空 | PDF Worker 地址；配置后不再自动启动本地 worker |
+| `PDF_WORKER_AUTOSTART` | `auto` | `auto`（未配置 URL 时自动启动本地 worker）/ `true`（总是）/ `false`（关闭） |
+| `PDF_WORKER_PORT` | `8000` | 自动启动的本地 worker 端口 |
+| `PDF_WORKER_DIR` | `../pdf-worker` | pdf-worker 目录 |
+| `PDF_WORKER_PYTHON` | 空 | 自定义 Python 解释器（默认自动使用 pdf-worker 下的 `.venv` / `venv`） |
+| `PDF_WORKER_TIMEOUT` | `600000` | 转发 worker 的超时（毫秒） |
+| `UPLOAD_LIMIT_MB` | `500` | 上传大小上限（MB） |
+| `SERVE_FRONTEND` | `true` | 是否同端口托管前端 |
+| `LOG_LEVEL` | `info` | 日志级别 |
 
 ## 项目结构
 

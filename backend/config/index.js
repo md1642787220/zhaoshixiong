@@ -49,6 +49,15 @@ function loadConfig(env = process.env) {
     pdfWorker: Object.freeze({
       url: env.PDF_WORKER_URL || '',
       timeoutMs: toInt(env.PDF_WORKER_TIMEOUT, 600000),
+      // 是否随 Node 后端自动启动本地 pdf-worker：
+      //   auto（默认）未配置 PDF_WORKER_URL 时自动启动；已配置则不启动
+      //   true        总是尝试启动本地 worker（忽略已有 URL）
+      //   false       从不自动启动
+      autostart: String(env.PDF_WORKER_AUTOSTART || 'auto').toLowerCase(),
+      port: toInt(env.PDF_WORKER_PORT, 8000),
+      dir: env.PDF_WORKER_DIR || path.join(rootDir, 'pdf-worker'),
+      // 自定义 Python 解释器；留空则优先使用 pdf-worker 下的 .venv / venv
+      python: env.PDF_WORKER_PYTHON || '',
     }),
 
     log: Object.freeze({

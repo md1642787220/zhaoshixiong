@@ -3,12 +3,14 @@
  * 通用渲染：上传区 + 参数表单（由 data/pdfTools.js 的 params 定义）
  * 提交：POST /api/pdf/:action  （后端已实现，支持 JSON/download 或 PDF/ZIP 文件流）
  * ============================================================ */
-import { getPdfTool, getPdfCategory } from '../data/pdfTools.js';
+import { getPdfTool, getPdfCategory, PDF_CATEGORIES, PDF_TOOLS } from '../data/pdfTools.js';
 import { icon } from '../components/icon.js';
+import { applyPdfCaps } from './pdf.js';
 import { esc, setStatus, toast, downloadBlob } from '../utils.js';
 import { processPdfWs } from '../api/pdfWs.js';
 import { processPdfHttp } from '../api/pdfHttp.js';
 import { Dropzone } from '../components/dropzone.js';
+import { PdfPreview } from '../components/pdfPreview.js';
 
 // 通过 WebSocket 走实时进度的动作（其余动作仍用 REST）
 const WS_ACTIONS = ['convert-office'];
@@ -41,11 +43,14 @@ function renderParam(p, prefix = '') {
         class="input" placeholder="${esc(p.placeholder || '')}" value="${esc(p.value || '')}">`;
       break;
     case 'number':
-    case 'range':
+    case 'range': {
+      // number 默认最小 0（避免负数）；具体上下限由参数上的 min / max 决定
+      const minAttr = p.min != null ? p.min : (p.type === 'number' ? 0 : '');
       inner = `<input id="${id}" name="${p.name}" type="${p.type}" class="input"
-        min="${p.min ?? ''}" max="${p.max ?? ''}" step="${p.step ?? ''}" value="${p.value ?? ''}">
+        min="${minAttr}" max="${p.max ?? ''}" step="${p.step ?? ''}" value="${p.value ?? ''}">
         ${p.type === 'range' ? `<output class="range-val">${esc(p.value ?? p.min ?? '')}</output>` : ''}`;
       break;
+    }
     case 'textarea':
       inner = `<textarea id="${id}" name="${p.name}" class="input" rows="4"
         placeholder="${esc(p.placeholder || '')}"></textarea>`;
@@ -81,10 +86,14 @@ function renderParam(p, prefix = '') {
     default:
       inner = `<input id="${id}" name="${p.name}" class="input">`;
   }
+  // 数值参数在 label 后附上允许范围，便于用户输入时参考
+  const rangeTip = (p.type === 'number' && (p.min != null || p.max != null))
+    ? ` <span class="field-hint">${p.min != null ? p.min : ''}${p.min != null && p.max != null ? '–' : ''}${p.max != null ? p.max : ''}</span>`
+    : '';
   const label = p.type === 'switch'
     ? `<label class="field-label-inline" for="${id}">${esc(p.label)}</label>`
     : p.type === 'signature-pad' ? ''
-    : `<label class="field-label" for="${id}">${esc(p.label)}</label>`;
+    : `<label class="field-label" for="${id}">${esc(p.label)}${rangeTip}</label>`;
   return `<div class="field ${p.type === 'switch' ? 'field-switch' : ''}" data-param="${p.name}">${label}${inner}</div>`;
 }
 
@@ -159,8 +168,6 @@ function setupPositionPicker(form, tool, dz) {
   async function loadPreview() {
     const files = dz && dz.getFiles ? dz.getFiles() : [];
     if (!files.length) return;
-    const url = await signatureURL();
-    if (!url) return; // 签名未就绪，等后续 change 事件再试
 
     // 「所在页」可能填 "1,3" 之类，取第一个数字
     const pageInput = form.querySelector('[name="page"]');
@@ -168,23 +175,42 @@ function setupPositionPicker(form, tool, dz) {
     const m = raw.match(/\d+/);
     const pageNo = m ? m[0] : '1';
 
-    const fd = new FormData();
-    fd.append('file', files[0]);
-    fd.append('page', pageNo);
-    fd.append('scale', '1.5');
+    // 1) 页面图先加载（不依赖签名），保证中间预览区始终有 PDF 页面
     try {
-      const res = await fetch('/api/pdf/render-page', { method: 'POST', body: fd });
-      if (!res.ok) return;
-      const blob = await res.blob();
-      pageImg.src = URL.createObjectURL(blob);
-      sig.src = url;
-      await new Promise((r) => { pageImg.onload = r; pageImg.onerror = r; });
+      const cacheKey = `${files[0].name}|${files[0].size}|${pageNo}`;
+      if (pageImg.dataset.key !== cacheKey) {
+        const fd = new FormData();
+        fd.append('file', files[0]);
+        fd.append('page', pageNo);
+        fd.append('scale', '1.5');
+        const res = await fetch('/api/pdf/render-page', { method: 'POST', body: fd });
+        if (res.ok) {
+          const blob = await res.blob();
+          if (pageImg.dataset.url) URL.revokeObjectURL(pageImg.dataset.url);
+          const u = URL.createObjectURL(blob);
+          pageImg.dataset.url = u;
+          pageImg.dataset.key = cacheKey;
+          pageImg.src = u;
+          await new Promise((r) => { pageImg.onload = r; pageImg.onerror = r; });
+        }
+      }
       stage.style.display = '';
+    } catch { /* 预览加载失败可忽略 */ }
+
+    // 2) 签名叠加（画完 / 选好后才显示）
+    const url = await signatureURL();
+    const handleEl = picker.querySelector('.resize-handle');
+    if (url) {
+      if (sig.dataset.url) URL.revokeObjectURL(sig.dataset.url);
+      sig.dataset.url = url;
+      sig.src = url;
       sig.style.display = '';
-      const handleEl = picker.querySelector('.resize-handle');
       if (handleEl) handleEl.style.display = '';
       placeSignature();
-    } catch {}
+    } else {
+      sig.style.display = 'none';
+      if (handleEl) handleEl.style.display = 'none';
+    }
   }
 
   // 上传/删除 PDF 时自动加载预览
@@ -198,6 +224,8 @@ function setupPositionPicker(form, tool, dz) {
   // 画板画完时刷新（先上传 PDF 后才画的场景）
   const pad = form.querySelector('.signature-pad canvas');
   if (pad) pad._onEndRefresh = loadPreview;
+  // 跨页面返回时文件由全局上传缓存回显（不会触发 onChange），这里主动加载一次
+  if (dz && dz.getFiles && dz.getFiles().length) loadPreview();
 
   // 拖动签名（鼠标 + 触屏）
   let dragging = false, startX = 0, startY = 0, originLeft = 0, originTop = 0;
@@ -400,58 +428,101 @@ function setupSignatureFeatures(form, tool, dz = null) {
   }
 }
 
+/** 校验可见的必填参数，返回错误提示或 null */
+function validateRequired(form, tool) {
+  for (const p of (tool.params || [])) {
+    if (!p.required) continue;
+    const field = form.querySelector(`[data-param="${p.name}"]`);
+    if (field && field.style.display === 'none') continue; // 条件未满足的字段跳过
+    const el = form.querySelector(`[name="${p.name}"]`);
+    if (!el) continue;
+    if (el.type === 'file') {
+      if (!el.files || !el.files.length) return `请选择「${p.label}」`;
+    } else if (el.type === 'checkbox') {
+      if (!el.checked) return `请勾选「${p.label}」`;
+    } else if (!String(el.value || '').trim()) {
+      return `请填写「${p.label}」`;
+    }
+  }
+  return null;
+}
+
 export default {
   title: 'PDF 工具 · 师兄',
   nav: '/pdf',
 
   render(params) {
-    const tool = getPdfTool(params.toolId);
-    if (!tool) {
-      return `<div class="page-head"><h1>未找到工具</h1>
-        <p class="sub"><a href="#/pdf">返回 PDF 工具</a></p></div>`;
-    }
+    const tool = getPdfTool(params.toolId) || PDF_TOOLS[0];
+    if (!tool) return `<div class="page-head"><h1>暂无可用工具</h1></div>`;
     const cat = getPdfCategory(tool.cat);
     const multiHint = tool.multi ? '可多选文件' : '仅支持单个 PDF 文件';
 
+    // 左栏：按分类分组的工具列表
+    const toolNav = PDF_CATEGORIES.map(c => {
+      const items = PDF_TOOLS.filter(t => t.cat === c.id);
+      if (!items.length) return '';
+      return `
+        <div class="wb-cat">${esc(c.name)}</div>
+        ${items.map(t => `
+          <a class="wb-tool${t.id === tool.id ? ' active' : ''}" href="#/pdf/${t.id}" data-action="${esc(t.action)}">
+            ${icon(t.icon, 16)}<span class="ptc-name">${esc(t.name)}</span>
+          </a>`).join('')}`;
+    }).join('');
+
     return `
     <div class="page-head">
-      <div class="breadcrumb">
-        <a href="#/pdf">PDF 工具</a> / <a href="#/pdf">${esc(cat ? cat.name : '')}</a> / ${esc(tool.name)}
-      </div>
-      <h1>${icon(tool.icon, 28)} ${esc(tool.name)}</h1>
-      <p class="sub">${esc(tool.desc)}</p>
+      <div class="breadcrumb"><a href="#/">首页</a> / PDF 工具 / ${esc(cat ? cat.name : '')}</div>
+      <h1>${icon('file', 28)} PDF 工具 <span class="count-tag">${PDF_TOOLS.length} 个</span></h1>
+      <p class="sub">左侧选工具 · 中间看预览 · 右侧调参数并处理</p>
     </div>
 
-    <div class="pdf-panel card">
-      <div id="dz-${tool.id}"></div>
+    <div class="pdf-wb">
+      <aside class="card pdf-wb-tools">${toolNav}</aside>
 
-      <form id="form-${tool.id}" class="pdf-form" data-action="${esc(tool.action)}" data-multi="${tool.multi ? 1 : 0}">
-        <div class="form-fields">${renderForm(tool)}</div>
+      <section class="card pdf-wb-main">
+        <div id="pv-${tool.id}"></div>
+      </section>
 
-        ${tool.hint ? `<div class="form-hint">${icon('info', 16)} ${esc(tool.hint)}</div>` : ''}
-
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary" id="btn-${tool.id}">
-            ${icon('refresh', 16)} 开始处理
-          </button>
-          <span class="field-hint">${multiHint}</span>
+      <aside class="card pdf-wb-side">
+        <div class="wb-tool-head">
+          <h3>${icon(tool.icon, 18)} ${esc(tool.name)}</h3>
+          <p class="sub">${esc(tool.desc)}</p>
         </div>
-        <div class="progress" id="progress-${tool.id}" hidden>
-          <div class="progress-bar"><span></span></div>
-          <div class="progress-tip" id="progress-tip-${tool.id}">等待开始…</div>
-        </div>
-        <div class="status" id="status-${tool.id}"></div>
-      </form>
+
+        <div id="dz-${tool.id}"></div>
+
+        <form id="form-${tool.id}" class="pdf-form" data-action="${esc(tool.action)}" data-multi="${tool.multi ? 1 : 0}">
+          <div class="form-fields">${renderForm(tool)}</div>
+
+          ${tool.hint ? `<div class="form-hint">${icon('info', 16)} ${esc(tool.hint)}</div>` : ''}
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="btn-${tool.id}">
+              ${icon('refresh', 16)} 开始处理
+            </button>
+            <button type="button" class="btn btn-primary" id="dl-${tool.id}" disabled>${icon('download', 16)} 下载</button>
+            <span class="field-hint">${multiHint}</span>
+          </div>
+          <div class="progress" id="progress-${tool.id}" hidden>
+            <div class="progress-bar"><span></span></div>
+            <div class="progress-tip" id="progress-tip-${tool.id}">等待开始…</div>
+          </div>
+          <div class="status" id="status-${tool.id}"></div>
+        </form>
+      </aside>
     </div>`;
   },
 
   mount(params) {
-    const tool = getPdfTool(params.toolId);
+    const tool = getPdfTool(params.toolId) || PDF_TOOLS[0];
     if (!tool) return;
     const dzEl = document.getElementById('dz-' + tool.id);
     const form = document.getElementById('form-' + tool.id);
     const statusEl = document.getElementById('status-' + tool.id);
     const btn = document.getElementById('btn-' + tool.id);
+
+    // 左栏工具列表打「未开放 / 需服务端支持」角标
+    applyPdfCaps();
 
     /* 1) 上传区（单/多文件） */
     const MAX_SIZE = 30 * 1024 * 1024;
@@ -464,6 +535,47 @@ export default {
       maxSize: MAX_SIZE,
       onError: (file, msg) => { toast(msg); setStatus(statusEl, 'err', msg); },
     });
+
+    const isSignTool = tool.action === 'sign';
+
+    /* 1.5) 通用 PDF 预览：渲染到中栏容器；上传后自动预览原文件，处理结果切到「处理结果」 */
+    const pvEl = document.getElementById('pv-' + tool.id) || (() => {
+      const el = document.createElement('div');
+      dzEl.after(el);
+      return el;
+    })();
+    const pv = PdfPreview(pvEl, { title: 'PDF 预览' });
+    // 手写签名：中栏由「签名位置」定位区充当预览，此处文件预览先隐藏（处理出结果后再显示）
+    if (isSignTool) pvEl.style.display = 'none';
+
+    /* 1.6) 下载按钮：上传且处理完成后才可用 */
+    const dlBtn = document.getElementById('dl-' + tool.id);
+    let resultBlob = null;
+    let resultName = '';
+    const clearResult = () => { resultBlob = null; resultName = ''; if (dlBtn) dlBtn.disabled = true; };
+    const setResult = (blob, name) => {
+      resultBlob = blob;
+      resultName = name || 'result';
+      if (dlBtn) dlBtn.disabled = false;
+      if (isSignTool) pvEl.style.display = ''; // 有结果时在中栏显示
+    };
+    if (dlBtn) dlBtn.addEventListener('click', () => {
+      if (resultBlob) downloadBlob(resultBlob, resultName || 'result');
+    });
+
+    dz.onChange((files) => {
+      if (isSignTool) {
+        // 签名工具：原文件由「签名位置」定位区展示，避免中栏重复预览
+        if (!files.length) pv.clear();
+      } else if (files && files.length) {
+        pv.showFile(files[0]);
+      } else {
+        pv.clear();
+      }
+      clearResult(); // 文件变化后需重新处理，下载按钮回到禁用
+    });
+    const initialFiles = dz.getFiles();
+    if (initialFiles.length && !isSignTool) pv.showFile(initialFiles[0]);
 
     /* 2) 条件字段显隐（when） */
     const applyConditions = () => {
@@ -513,9 +625,32 @@ export default {
       }
     }
 
+    /* 4.6) 手写签名：把「签名位置」定位区移到中栏预览区，获得更大的操作空间 */
+    if (tool.action === 'sign') {
+      const pickerField = form.querySelector('[data-param="positionPicker"]');
+      const mainEl = document.querySelector('.pdf-wb-main');
+      if (pickerField && mainEl) {
+        pickerField.classList.add('picker-in-main');
+        mainEl.insertBefore(pickerField, mainEl.firstChild);
+      }
+    }
+
     /* 5) 提交 */
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      // 数值输入按 min / max 规整（原生 number 不会阻止越界输入，提交前统一纠正）
+      form.querySelectorAll('input[type="number"]').forEach((el) => {
+        if (el.value === '') return;
+        const min = el.min === '' ? -Infinity : Number(el.min);
+        const max = el.max === '' ? Infinity : Number(el.max);
+        const step = Number(el.step) || 0;
+        let v = Number(el.value);
+        if (!Number.isFinite(v)) v = Number.isFinite(min) ? min : 0;
+        v = Math.min(max, Math.max(min, v));
+        if (step > 0) v = Math.round(v / step) * step;
+        el.value = String(v);
+      });
+      // 1) 先校验文件：未上传时优先提示上传 PDF
       const files = dz.getFiles();
       if (!files.length) { toast('请先上传文件'); setStatus(statusEl, 'err', '请先上传文件'); return; }
 
@@ -527,6 +662,10 @@ export default {
         setStatus(statusEl, 'err', msg);
         return;
       }
+
+      // 2) 再校验必填参数（如未填水印文字 / 未选水印图片）
+      const missing = validateRequired(form, tool);
+      if (missing) { toast(missing); setStatus(statusEl, 'err', missing); return; }
 
       // WebSocket 实时进度通道（目前支持 PDF→Word）
       if (WS_ACTIONS.includes(tool.action)) {
@@ -554,10 +693,16 @@ export default {
           const { blob, filename } = useHttp
             ? await processPdfHttp(tool.action, files[0], collectParams(form, tool), onProgress)
             : await processPdfWs(tool.action, files[0], collectParams(form, tool), onProgress);
-          downloadBlob(blob, filename);
           bar.style.width = '100%';
           tip.textContent = '完成';
-          setStatus(statusEl, 'ok', '处理完成，已开始下载');
+          setResult(blob, filename);
+          if ((blob.type || '').includes('pdf')) {
+            pv.showResult(blob, filename);
+            setStatus(statusEl, 'ok', '处理完成，已在预览中显示，可下载');
+          } else {
+            downloadBlob(blob, filename);
+            setStatus(statusEl, 'ok', '处理完成，已开始下载（该格式不支持预览）');
+          }
         } catch (err) {
           setStatus(statusEl, 'err', err.message || '处理失败');
         } finally {
@@ -599,19 +744,26 @@ export default {
         const res = await fetch(`/api/pdf/${tool.action}`, { method: 'POST', body: fd });
         const ct = (res.headers.get('content-type') || '').toLowerCase();
 
-        // 后端直接返回文件流（PDF / ZIP），立即触发下载
-        if (res.ok && (ct.includes('application/pdf') || ct.includes('application/zip'))) {
+        const cd = res.headers.get('content-disposition') || '';
+        const pickName = (ext) => (cd.match(/filename[^;=\n]*=(['"]?)([^'"\s;]+)\1/) || [])[2] || `result.${ext}`;
+
+        // PDF 结果：直接在预览区展示（操作结果都能在预览中看到）
+        if (res.ok && ct.includes('application/pdf')) {
           const blob = await res.blob();
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          const ext = ct.includes('application/pdf') ? 'pdf' : 'zip';
-          const cd = res.headers.get('content-disposition') || '';
-          const filename = (cd.match(/filename[^;=\n]*=(['"]?)([^'"\s;]+)\1/) || [])[2] || `result.${ext}`;
-          a.href = url;
-          a.download = filename;
-          a.click();
-          URL.revokeObjectURL(url);
-          setStatus(statusEl, 'ok', '处理完成，文件已开始下载');
+          const filename = pickName('pdf');
+          setResult(blob, filename);
+          pv.showResult(blob, filename);
+          setStatus(statusEl, 'ok', '处理完成，已在预览中显示，可下载');
+          return;
+        }
+
+        // ZIP 等打包结果不支持预览，保持下载
+        if (res.ok && ct.includes('application/zip')) {
+          const blob = await res.blob();
+          const filename = pickName('zip');
+          setResult(blob, filename);
+          downloadBlob(blob, filename);
+          setStatus(statusEl, 'ok', '处理完成（打包结果不支持预览），文件已开始下载');
           return;
         }
 

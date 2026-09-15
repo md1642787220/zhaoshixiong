@@ -19,18 +19,31 @@ export function pdfToolCard(t) {
   </a>`;
 }
 
-/** 拉取能力清单，给「暂未开放」的 PDF 工具卡片加角标 */
+/**
+ * 拉取能力清单，为 PDF 工具卡片标注状态：
+ *   - implemented === false            → 「未开放」（后端尚未实现）
+ *   - 已实现但依赖引擎且当前不可用      → 「需服务端支持」（未部署 PDF Worker）
+ */
 export async function applyPdfCaps() {
   let caps = {};
   try { caps = await pdfApi.capabilities(); } catch { return; }
-  document.querySelectorAll('.pdf-tool-card[data-action]').forEach(card => {
+  document.querySelectorAll('.pdf-tool-card[data-action], .wb-tool[data-action]').forEach(card => {
     const cap = caps[card.dataset.action];
-    if (cap && cap.available === false) {
-      const name = card.querySelector('.ptc-name');
-      if (name && !name.querySelector('.ptc-tag')) {
-        name.insertAdjacentHTML('beforeend', '<span class="ptc-tag">暂未开放</span>');
+    if (!cap) return;
+    const name = card.querySelector('.ptc-name') || card;
+
+    if (cap.implemented === false) {
+      // 未实现：右上角小红叉 + 文字角标 + 悬停提示
+      card.classList.add('is-closed', 'is-unimplemented');
+      card.title = '该功能尚未实现';
+      if (!name.querySelector('.ptc-tag')) {
+        name.insertAdjacentHTML('beforeend', '<span class="ptc-tag">未开放</span>');
       }
-      card.classList.add('is-closed');
+    } else if (cap.needsWorker && cap.available === false) {
+      // 已实现但依赖引擎且当前未部署
+      if (!name.querySelector('.ptc-tag')) {
+        name.insertAdjacentHTML('beforeend', '<span class="ptc-tag pending">需服务端支持</span>');
+      }
     }
   });
 }

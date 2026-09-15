@@ -8,19 +8,11 @@ import { TOOLS } from '../data/tools.js';
 import { PDF_TOOLS } from '../data/pdfTools.js';
 import { learnApi } from '../api/learn.js';
 import { icon } from '../components/icon.js';
+import { toolCard } from './tools.js';
 import { pdfToolCard, applyPdfCaps } from './pdf.js';
 import { aboutSection, bindAboutEgg } from '../components/aboutSection.js';
 import { SECTIONS } from '../data/sections.js';
 import { esc } from '../utils.js';
-
-function toolCard(t) {
-  return `
-  <a class="card tool-card" href="#${t.path}">
-    <div class="card-icon">${icon(t.icon, 26)}</div>
-    <h3>${t.name}</h3>
-    <p class="desc">${t.desc}</p>
-  </a>`;
-}
 
 function learnCard(c) {
   return `

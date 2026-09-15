@@ -105,6 +105,8 @@
   font-size: 11px; font-weight: 500; line-height: 17px; vertical-align: 1px;
   color: #a16207; background: #fef6e4; border: 1px solid #fbe3b0; border-radius: var(--radius-full);
 }
+/* 已实现、但需部署 PDF Worker 引擎才可运行 */
+.ptc-tag.pending { color: #2d6984; background: #e9f3f7; border-color: #bfdfec; }
 
 /* ============ PDF 板块：标题计数与分类筛选 ============ */
 .count-tag {
@@ -137,6 +139,89 @@
 .pdf-group-head h2 { font-size: 17px; margin: 0; }
 .pdf-group-head .sub { font-size: 12.5px; color: var(--text-muted); margin: 2px 0 0; }
 
+/* ============ PDF 通用预览（上传后自动显示） ============ */
+.pdf-preview {
+  margin: 4px 0 18px; border: 1px solid var(--border-strong);
+  border-radius: var(--radius); overflow: hidden; background: var(--surface-soft);
+  box-shadow: var(--shadow-sm);
+}
+.pv-head {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 8px 12px; background: var(--surface); border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.pv-title { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--text); }
+.pv-tabs { display: inline-flex; gap: 4px; }
+.pv-tab {
+  border: 1px solid var(--border); background: #fff; color: var(--text-secondary);
+  padding: 3px 10px; border-radius: var(--radius-full); font-size: 12px;
+  cursor: pointer; font-family: inherit; transition: all var(--dur) var(--ease);
+}
+.pv-tab:hover:not(:disabled) { border-color: var(--primary-200); color: var(--primary); }
+.pv-tab.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.pv-tab:disabled { opacity: .45; cursor: not-allowed; }
+.pv-actions { margin-left: auto; display: inline-flex; gap: 12px; }
+.pv-body { position: relative; background: #525659; }
+.pv-body[hidden] { display: none; }
+.pv-frame { width: 100%; height: 520px; border: 0; display: block; background: #fff; }
+.pv-frame[hidden] { display: none; }
+.pv-empty {
+  padding: 40px 16px; text-align: center; color: var(--text-muted);
+  font-size: 13px; background: var(--surface-soft);
+}
+.pv-empty[hidden] { display: none; }
+
+/* ============ PDF 单页工作台（左：工具 / 中：预览 / 右：参数） ============ */
+/* 放宽工作台页面的容器上限，充分利用两侧空间（仅作用于含 .pdf-wb 的页面） */
+.container:has(.pdf-wb) { width: 96%; max-width: 2200px; }
+.pdf-wb {
+  display: grid;
+  grid-template-columns: clamp(200px, 24vw, 560px) minmax(0, 1fr) clamp(300px, 20vw, 400px);
+  gap: 16px; align-items: start;
+}
+/* 左栏：空间充足时工具自动多列铺开（避免长列表滚动），窗口收窄时自动退回单列 */
+.pdf-wb-tools {
+  padding: 10px; position: sticky; top: 86px;
+  max-height: calc(100vh - 120px); overflow-y: auto;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 2px 10px; align-content: start;
+}
+.wb-cat { font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 12px 6px 4px; grid-column: 1 / -1; }
+.wb-cat:first-child { margin-top: 0; }
+.wb-tool {
+  display: flex; align-items: center; gap: 8px; padding: 7px 9px;
+  border-radius: var(--radius-sm); color: var(--text-secondary);
+  font-size: 13px; transition: all var(--dur) var(--ease);
+}
+.wb-tool:hover { background: var(--primary-50); color: var(--primary-700); }
+.wb-tool.active {
+  background: var(--primary-50); color: var(--primary-700); font-weight: 600;
+  outline: 2px solid var(--primary); outline-offset: -2px;
+}
+.wb-tool.is-closed { opacity: .6; }
+.wb-tool .icon { flex-shrink: 0; }
+.wb-tool .ptc-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pdf-wb-main { padding: 14px; }
+.pdf-wb-main .pv-frame { height: clamp(440px, calc(100vh - 260px), 900px); }
+.pdf-wb-side { padding: 18px 20px; position: sticky; top: 86px; max-height: calc(100vh - 120px); overflow-y: auto; }
+/* 工作台右栏较窄：签名等两列表单改为单列堆叠 */
+.pdf-wb-side .form-fields.sign-layout { grid-template-columns: 1fr; }
+/* 手写签名：位置定位区移到中栏后占满宽度 */
+.picker-in-main { margin: 0 0 16px; }
+.picker-in-main .preview-stage { width: 100%; }
+.wb-tool-head { margin-bottom: 14px; }
+.wb-tool-head h3 { display: flex; align-items: center; gap: 8px; font-size: 15px; margin: 0 0 6px; }
+.wb-tool-head .sub { font-size: 12.5px; color: var(--text-muted); margin: 0; line-height: 1.6; }
+@media (max-width: 1100px) {
+  .pdf-wb { grid-template-columns: 180px minmax(0, 1fr); }
+  .pdf-wb-side { grid-column: 1 / -1; position: static; max-height: none; }
+}
+@media (max-width: 760px) {
+  .pdf-wb { grid-template-columns: 1fr; }
+  .pdf-wb-tools { position: static; max-height: 220px; }
+  .pdf-wb-main .pv-frame { height: 420px; }
+}
+
 /* ============ PDF 工具表单 ============ */
 .pdf-panel { max-width: 760px; margin: 0 auto; }
 
@@ -157,6 +242,19 @@
 .field-hint { font-size: 12px; font-weight: 400; color: var(--text-muted); margin-left: 6px; }
 .form-empty { color: var(--text-muted); font-size: 13.5px; margin: 4px 0 12px; }
 .form-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; margin-bottom: 18px; }
+/* 文件选择字段独占整行，避免与相邻字段挤在一起（如「水印图片」） */
+.form-fields .field:has(input[type="file"]) { grid-column: 1 / -1; }
+input[type="file"].input {
+  width: 100%; padding: 7px 10px;
+  overflow: hidden; text-overflow: ellipsis;
+}
+input[type="file"].input::file-selector-button {
+  margin-right: 10px; padding: 5px 12px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--text); font: inherit; cursor: pointer;
+  transition: all var(--dur) var(--ease);
+}
+input[type="file"].input::file-selector-button:hover { border-color: var(--primary-300); color: var(--primary); }
 /* 手写签名工具左右两栏：左 = 签名准备（窄），右 = 预览（宽）。
    隐藏 x/y/scale 滑块（DOM 保留供 setRange 写入并随表单提交），让用户直接拖预览上的签名 + 角点/滚轮调大小。 */
 .form-fields.sign-layout { grid-template-columns: minmax(280px, 1fr) minmax(0, 1.8fr); gap: 18px 24px; }
@@ -193,6 +291,8 @@
 }
 .form-hint .icon { flex-shrink: 0; margin-top: 2px; }
 .form-actions { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+/* 操作按钮等宽且内容居中 */
+.form-actions .btn { min-width: 132px; justify-content: center; }
 
 /* 分段选择器 */
 .seg-group {
@@ -517,6 +617,64 @@ body.shake { animation: bodyShake .45s ease; }
 .about-story {
   margin: 0;
   font-size: 14px; line-height: 1.9; color: var(--text-secondary);
+}
+
+/* ============ 「未开放」功能标注 ============ */
+/* 未实现功能：右上角小红叉（都实现时不会出现） */
+.is-unimplemented { position: relative; }
+.is-unimplemented::after {
+  content: '✕';
+  position: absolute; top: 3px; right: 5px;
+  font-size: 12px; font-weight: 700; line-height: 1;
+  color: #e5484d; pointer-events: none;
+}
+.wb-tool.is-unimplemented { padding-right: 18px; }
+.tool-tag {
+  display: inline-block; margin-left: 8px; padding: 0 7px;
+  font-size: 11px; font-weight: 500; line-height: 17px; vertical-align: 1px;
+  color: #a16207; background: #fef6e4; border: 1px solid #fbe3b0;
+  border-radius: var(--radius-full); white-space: nowrap;
+}
+.tool-tag-sm { margin-left: auto; font-size: 10px; line-height: 15px; padding: 0 6px; }
+.tool-card.is-closed { opacity: .75; }
+.tool-card.is-closed .card-icon { filter: grayscale(.5); }
+.tool-nav a.is-closed { opacity: .72; }
+.tool-notice {
+  display: flex; align-items: center; gap: 8px;
+  background: #fff9ef; border: 1px solid #ffe6bb; color: #8a5a15;
+  padding: 11px 14px; border-radius: var(--radius);
+  font-size: 12.5px; margin-bottom: 18px;
+}
+
+/* ============ 寸照编辑器 ============ */
+.idp-controls {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px 20px; margin-bottom: 20px;
+}
+.idp-stage {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 24px; border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md); background: var(--surface-soft);
+}
+.idp-canvas {
+  max-width: 260px; max-height: 340px; height: auto;
+  border-radius: var(--radius-sm); box-shadow: var(--shadow);
+  background: #fff; cursor: grab; touch-action: none;
+}
+.idp-canvas:active { cursor: grabbing; }
+.idp-tip { font-size: 12.5px; color: var(--text-muted); margin: 0; text-align: center; }
+.idp-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 18px 0 4px; }
+.idp-paper { width: auto; min-width: 200px; }
+.idp-sheet-wrap { margin-top: 18px; text-align: center; }
+.idp-sheet-img {
+  max-width: 100%; max-height: 520px; height: auto;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: #fff; box-shadow: var(--shadow-sm);
+}
+@media (max-width: 640px) {
+  .idp-controls { grid-template-columns: 1fr; }
+  .idp-actions { flex-direction: column; align-items: stretch; }
+  .idp-paper { width: 100%; }
 }
 
 /* ============ 响应式 ============ */
