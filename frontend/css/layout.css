@@ -145,6 +145,10 @@ button.qn-item:focus-visible { outline: none; box-shadow: var(--ring); }
 .notfound { text-align: center; padding: 100px 0; }
 .notfound .code { font-size: 68px; font-weight: 700; color: var(--primary-200); letter-spacing: -0.03em; }
 .notfound p { color: var(--text-secondary); margin: 12px 0 26px; }
+.notfound .nf-hint {
+  font-size: 13.5px; color: var(--text-muted);
+  max-width: 460px; margin: 0 auto 26px; line-height: 1.85;
+}
 
 /* ============ 页脚 ============ */
 .footer {

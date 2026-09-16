@@ -4,6 +4,15 @@
 
 export const LEARN_CATEGORIES = [
   {
+    id: 'shortcuts',
+    name: '常用快捷键',
+    icon: 'toolbox',
+    description: '电脑基础、Office、浏览器、输入法等高频快捷键速查，别再用鼠标一个个点，工作效率大不一样。',
+    // 独立速查页面（非资源型专区），由 views/shortcuts.js 渲染
+    path: '/learn/shortcuts',
+    resources: [],
+  },
+  {
     id: 'office',
     name: 'Office/WPS 专区',
     icon: 'bar-chart',

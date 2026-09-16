@@ -4,7 +4,9 @@
  * 提交：POST /api/pdf/:action  （后端已实现，支持 JSON/download 或 PDF/ZIP 文件流）
  * ============================================================ */
 import { getPdfTool, getPdfCategory, PDF_CATEGORIES, PDF_TOOLS } from '../data/pdfTools.js';
+import { PDF_TOOL_INTROS } from '../data/pdfToolIntros.js';
 import { icon } from '../components/icon.js';
+import { featureIntro } from '../components/featureIntro.js';
 import { applyPdfCaps } from './pdf.js';
 import { esc, setStatus, toast, downloadBlob } from '../utils.js';
 import { processPdfWs } from '../api/pdfWs.js';
@@ -488,6 +490,8 @@ export default {
           <h3>${icon(tool.icon, 18)} ${esc(tool.name)}</h3>
           <p class="sub">${esc(tool.desc)}</p>
         </div>
+
+        ${featureIntro(PDF_TOOL_INTROS[tool.id], { compact: true })}
 
         <div id="dz-${tool.id}"></div>
 

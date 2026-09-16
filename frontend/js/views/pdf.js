@@ -6,6 +6,7 @@ import { PDF_CATEGORIES, PDF_TOOLS } from '../data/pdfTools.js';
 import { pdfApi } from '../api/pdf.js';
 import { icon } from '../components/icon.js';
 import { esc } from '../utils.js';
+import { featureIntro } from '../components/featureIntro.js';
 
 /** 首页紧凑卡片（grid-pdf 用，home.js 复用） */
 export function pdfToolCard(t) {
@@ -73,8 +74,14 @@ export default {
     <div class="page-head">
       <div class="breadcrumb"><a href="#/">首页</a> / PDF 工具</div>
       <h1>${icon('file', 28)} PDF 工具 <span class="count-tag">${PDF_TOOLS.length} 个</span></h1>
-      <p class="sub">覆盖转换、页面操作、安全签名、内容编辑、高级处理与辅助工具——能力对齐开源 Stirling-PDF</p>
+      <p class="sub">跟 PDF 文件有关的各种麻烦事，这里都有对应的工具</p>
     </div>
+
+    ${featureIntro({
+      title: '这一页能帮你解决什么？',
+      text: '日常遇到的情况比如：别人发来的材料改不动里面的字、好几份文件想拼成一份、扫描件太暗看不清、文件发出去怕外泄想加水印、报名要交 PDF 但手里只有图片。上面按用途分成了六类，点标签可以只看某一类。',
+      note: '每个工具点进去后，右侧还会用大白话说明它具体怎么用、什么时候用得上。',
+    })}
 
     <div class="pdf-filters">
       ${filters.map(f => `

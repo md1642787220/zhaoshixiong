@@ -3,6 +3,7 @@
  * ============================================================ */
 import { TOOLS, getTool } from '../data/tools.js';
 import { icon } from '../components/icon.js';
+import { featureIntro } from '../components/featureIntro.js';
 
 /**
  * 生成工具详情页布局
@@ -30,6 +31,7 @@ export function toolPage(toolId, bodyHtml) {
     </aside>
     <div class="card tool-panel">
       ${notice}
+      ${featureIntro(tool.intro)}
       ${bodyHtml}
     </div>
   </div>`;

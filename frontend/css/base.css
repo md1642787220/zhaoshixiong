@@ -129,6 +129,13 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* 隐藏属性的全局兜底：
+   页面大量用 el.hidden 切换显隐，但浏览器默认的 [hidden]{display:none}
+   优先级低于任何自定义的 display 规则（如 .sc-key-chip{display:inline-flex}），
+   一旦漏写 xxx[hidden]{display:none} 元素就会「永远显示」。
+   这里统一加最高优先级，避免逐个元素补丁。 */
+[hidden] { display: none !important; }
+
 html { scroll-behavior: smooth; }
 
 body {

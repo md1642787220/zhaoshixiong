@@ -10,6 +10,7 @@ import mediaView from './media.js';
 import handwritingView from './handwriting.js';
 import idphotoView from './idphoto.js';
 import learnView from './learn.js';
+import shortcutsView from './shortcuts.js';
 import categoryView from './category.js';
 import postView from './post.js';
 import pdfToolView from './pdfTool.js';
@@ -23,6 +24,8 @@ export const views = [
   { path: '/tools/handwriting', view: handwritingView },
   { path: '/tools/idphoto', view: idphotoView },
   { path: '/learn', view: learnView },
+  // 注意：必须排在 '/learn/:id' 之前，否则会被参数路由匹配成 id=shortcuts
+  { path: '/learn/shortcuts', view: shortcutsView },
   { path: '/learn/:id', view: categoryView },
   { path: '/learn/:id/post', view: postView },
   { path: '/pdf', view: pdfToolView },

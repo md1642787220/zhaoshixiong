@@ -9,6 +9,7 @@ import { learnApi } from '../api/learn.js';
 import { apiJson } from '../api/client.js';
 import { icon } from '../components/icon.js';
 import { esc, toast } from '../utils.js';
+import { featureIntro } from '../components/featureIntro.js';
 
 /* ---------------- 校验规则（与后端 learnService 保持一致） ---------------- */
 const RULES = {
@@ -270,6 +271,11 @@ export default {
           </div>
           <button type="button" class="btn btn-primary js-contribute">${icon('pen-tool', 16)} 我要贡献</button>
         </div>
+        ${featureIntro({
+          title: '这个专区怎么用？',
+          text: '下面表格里的资料，看中了就点最右边的按钮：写「下载」的直接存到电脑，写「查看」的点开就能看，写「阅读原文」的会跳到别人的网站。',
+          note: '你手上有好用的模板或经验，也可以点右上角「我要贡献」分享给大家——写帖子、传文件、贴链接都行。',
+        })}
         <div id="res-wrap">${resourceTable(cat.resources)}</div>
       </div>`;
 

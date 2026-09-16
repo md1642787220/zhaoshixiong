@@ -12,6 +12,7 @@ import { toolPage } from './toolLayout.js';
 import { setupDropzone } from '../components/dropzone.js';
 import { icon } from '../components/icon.js';
 import { setStatus, stripExt, fmtSize } from '../utils.js';
+import { featureIntro } from '../components/featureIntro.js';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
@@ -155,16 +156,29 @@ const TAB_DEFS = [
   { id: 'music', name: '音频素材下载', icon: 'globe' },
 ];
 
+/** 三个标签页各自的一句话说明（切换标签即可看到） */
+const TAB_INTROS = {
+  extract: '把电脑里的视频文件抽出声音、存成 MP3。比如把一段讲课录像变成音频，路上也能听。',
+  clip: '粘贴一个视频网址，把整段视频下载到电脑上；也可以只截取其中一小段保存。',
+  music: '粘贴一个视频网址，只把里面的声音存下来，适合收集背景音乐、课件配乐。',
+};
+
 function body() {
   const tabs = TAB_DEFS.map((t, i) =>
     `<button type="button" class="media-tab${i === 0 ? ' active' : ''}" data-tab="${t.id}">${icon(t.icon, 16)} ${t.name}</button>`
   ).join('');
 
+  const panel = (id, html, hidden) => `
+  <div class="media-panel" data-panel="${id}"${hidden ? ' hidden' : ''}>
+    ${featureIntro(TAB_INTROS[id], { title: '这个标签页是干什么的？' })}
+    ${html}
+  </div>`;
+
   return `
   <div class="media-tabs" id="md-tabs">${tabs}</div>
-  <div class="media-panel" data-panel="extract">${extractPanel()}</div>
-  <div class="media-panel" data-panel="clip" hidden>${clipPanel()}</div>
-  <div class="media-panel" data-panel="music" hidden>${sourcePanel()}</div>`;
+  ${panel('extract', extractPanel())}
+  ${panel('clip', clipPanel(), true)}
+  ${panel('music', sourcePanel(), true)}`;
 }
 
 /* ---------- 各子功能交互 ---------- */

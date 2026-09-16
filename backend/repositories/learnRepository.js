@@ -37,6 +37,8 @@ function createLearnRepository({ dataPath, logger } = {}) {
       icon: c.icon,
       description: c.description,
       count: (c.resources || []).length,
+      // 自定义跳转：非资源型专区（如「常用快捷键」）指向独立页面
+      ...(c.path ? { path: c.path } : {}),
     }));
   }
 

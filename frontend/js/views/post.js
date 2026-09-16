@@ -6,6 +6,7 @@
 import { apiJson } from '../api/client.js';
 import { icon } from '../components/icon.js';
 import { esc, toast } from '../utils.js';
+import { featureIntro } from '../components/featureIntro.js';
 
 const RULES = { TITLE_MIN: 2, TITLE_MAX: 80, POST_MIN: 10 };
 
@@ -23,6 +24,12 @@ export default {
       <h1>${icon('pen-tool', 28)} 写经验帖</h1>
       <p class="sub">分享你的做法、步骤与踩过的坑，帮助更多师弟师妹</p>
     </div>
+
+    ${featureIntro({
+      title: '这里是要做什么？',
+      text: '把你工作中总结出来的做法、步骤写下来发出去，其他同事就能看到。比如「怎么快速排好一份公文」「某某表格怎么填不容易出错」，都很受欢迎。',
+      note: '正文里可以敲回车分段，写多长都行。署名不填的话会显示成「匿名师兄」。',
+    })}
 
     <div class="card post-edit-card">
       <form id="postForm" novalidate>

@@ -12,20 +12,8 @@ import { toolCard } from './tools.js';
 import { pdfToolCard, applyPdfCaps } from './pdf.js';
 import { aboutSection, bindAboutEgg } from '../components/aboutSection.js';
 import { SECTIONS } from '../data/sections.js';
-import { esc } from '../utils.js';
-
-function learnCard(c) {
-  return `
-  <a class="card learn-card" href="#/learn/${c.id}">
-    <div class="card-icon">${icon(c.icon, 26)}</div>
-    <h3>${esc(c.name)}</h3>
-    <p class="desc">${esc(c.description)}</p>
-    <div class="card-meta">
-      <span class="badge">${c.count} 项资源</span>
-      <span class="card-link">进入专区</span>
-    </div>
-  </a>`;
-}
+import { learnCard } from '../components/learnCard.js';
+import { featureIntro } from '../components/featureIntro.js';
 
 /** 板块快捷入口卡片（route 用链接，scroll 用按钮以免干扰 hash 路由） */
 function sectionCard(s) {
@@ -51,6 +39,12 @@ export default {
 
   render() {
     return `
+    ${featureIntro({
+      title: '这个网站是干什么的？',
+      text: '给老师、公务员等体制内同事准备的办公工具箱。工作中那些又琐碎又费时间的小事——比如证件照要改尺寸换底色、PDF 里的字改不动、电脑快捷键不会用——在这里几步就能搞定。不用下载安装，也不用注册账号。',
+      note: '第一次来可以点下面的方块快速找到自己需要的板块。',
+    })}
+
     <nav class="quick-nav" aria-label="板块快速导航">
       ${SECTIONS.map(sectionCard).join('')}
     </nav>

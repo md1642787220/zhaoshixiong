@@ -3,20 +3,8 @@
  * ============================================================ */
 import { learnApi } from '../api/learn.js';
 import { icon } from '../components/icon.js';
-import { esc } from '../utils.js';
-
-function learnCard(c) {
-  return `
-  <a class="card learn-card" href="#/learn/${c.id}">
-    <div class="card-icon">${icon(c.icon, 26)}</div>
-    <h3>${esc(c.name)}</h3>
-    <p class="desc">${esc(c.description)}</p>
-    <div class="card-meta">
-      <span class="badge">${c.count} 项资源</span>
-      <span class="card-link">进入专区</span>
-    </div>
-  </a>`;
-}
+import { learnCard } from '../components/learnCard.js';
+import { featureIntro } from '../components/featureIntro.js';
 
 export default {
   title: '学习板块 · 师兄',
@@ -27,8 +15,13 @@ export default {
     <div class="page-head">
       <div class="breadcrumb"><a href="#/">首页</a> / 学习板块</div>
       <h1>${icon('book-open', 28)} 学习板块</h1>
-      <p class="sub">五大专属专区，办公技能与考试提升持续充电</p>
+      <p class="sub" id="learn-sub">专区持续更新中</p>
     </div>
+    ${featureIntro({
+      title: '这一页是干什么的？',
+      text: '按用途分好的资料专区，每个专区里放着整理过的文档、模板和使用技巧。点任意一个专区进去，就能查看或下载里面的资料。',
+      note: '「常用快捷键」专区不用下载，是直接查的：看到哪条顺手就记下来，用上三四次自然就记住了。',
+    })}
     <div class="grid-4" id="learn-grid"><div class="loadbox">加载中…</div></div>`;
   },
 
@@ -36,5 +29,9 @@ export default {
     const grid = document.getElementById('learn-grid');
     const list = await learnApi.categories();
     grid.innerHTML = list.map(learnCard).join('');
+
+    // 专区数量随后端数据变化，这里按实际条数回填，避免写死数字后对不上
+    const sub = document.getElementById('learn-sub');
+    if (sub) sub.textContent = `${list.length} 个专区，办公技能、考试提分与效率工具持续更新`;
   },
 };

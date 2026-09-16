@@ -5,6 +5,7 @@
 import { navApi } from '../api/nav.js';
 import { icon } from '../components/icon.js';
 import { esc } from '../utils.js';
+import { featureIntro } from '../components/featureIntro.js';
 
 function statusInfo(s) {
   if (!s.status) return { cls: 'pending', text: '待校验' };
@@ -41,6 +42,11 @@ export default {
       <h1>${icon('globe', 28)} 网址导航</h1>
       <p class="sub">收录全国各地政府官方网站，以及各地教育机构和学校官方网站，链接定期校验更新</p>
     </div>
+    ${featureIntro({
+      title: '这一页是干什么的？',
+      text: '把各级政府、教育部门和学校的官方网站整理在一起。以后要办什么事，直接来这里点就行，不用在搜索里一条条翻，也能避开仿冒的假网站。',
+      note: '网站名字后面的小圆点表示最近检查的情况——鼠标放上去会显示「可访问」还是「暂不可达」。',
+    })}
     <div class="nav-toolbar">
       <div class="kind-tabs" id="navCats"></div>
       <div class="nav-filters">

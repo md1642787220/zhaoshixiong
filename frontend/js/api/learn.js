@@ -17,7 +17,9 @@ function toSummary(c) {
     name: c.name,
     icon: c.icon,
     description: c.description,
-    count: c.resources.length,
+    count: (c.resources || []).length,
+    // 自定义跳转（如「常用快捷键」是独立页面，不走通用分类详情页）
+    ...(c.path ? { path: c.path } : {}),
   };
 }
 

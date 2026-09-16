@@ -146,6 +146,7 @@ export function Dropzone(container, opts = {}) {
   return {
     el: zone,
     getFiles,
+    add,   // 供外部容器（如寸照预览框）把拖入的文件交给上传区统一校验与登记
     onChange: (fn) => listeners.push(fn),
     destroy: () => { if (unsub) unsub(); },
   };
