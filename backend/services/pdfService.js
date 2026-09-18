@@ -41,6 +41,8 @@ const ENGINE_ACTIONS = new Set([
   'image-to-pdf',
   'adjust-contrast', 'show-js', 'scanner-split', 'unlock-forms',
   'compare',
+  // 书签编辑：pdf-lib 不支持 outline（书签），必须由 Python worker(PyMuPDF set_toc) 写入
+  'edit-bookmarks',
   // PDF 页面渲染为图片：供前端签名位置可视化预览（PyMuPDF）
   'render-page',
 ]);
@@ -65,6 +67,7 @@ const ENGINE_LABELS = {
   'scanner-split': '图像切分引擎（OpenCV 等）',
   'unlock-forms': 'qpdf / mutool',
   compare: 'PDF 差异比对引擎',
+  'edit-bookmarks': 'PyMuPDF（书签 / 目录写入）',
   'render-page': 'PyMuPDF（PDF 页面渲染为图片）',
 };
 

@@ -80,7 +80,7 @@ def extract_images(files, params):
                     headers={"Content-Disposition": "attachment; filename*=UTF-8''images.zip"})
 
 
-@register("change-metadata", desc="编辑元数据")
+@register("change-metadata", desc="编辑文档信息")
 def change_metadata(files, params):
     p, _, _ = save_uploads(files)[0]
     doc = fitz.open(str(p))

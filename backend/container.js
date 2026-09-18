@@ -7,11 +7,9 @@ const { createStorage } = require('./infrastructure/storage');
 const { createPdfWorkerClient } = require('./infrastructure/pdfWorkerClient');
 const { createPdfEngine } = require('./infrastructure/pdfEngineFactory');
 const { createLearnRepository } = require('./repositories/learnRepository');
-const { createNavRepository } = require('./repositories/navRepository');
 const { createConvertService } = require('./services/convertService');
 const { createTextService } = require('./services/textService');
 const { createLearnService } = require('./services/learnService');
-const { createNavService } = require('./services/navService');
 const { createPdfService } = require('./services/pdfService');
 const { createHandwritingService } = require('./services/handwritingService');
 const { createMediaSourceService } = require('./services/mediaSourceService');
@@ -32,31 +30,18 @@ function createContainer({ config, logger }) {
 
   /* ---------- 数据访问层 ---------- */
   const learnRepository = createLearnRepository({ logger });
-  const navRepository = createNavRepository({ logger });
 
   /* ---------- 业务服务层 ---------- */
   const services = {
     convert: createConvertService({ logger }),
     text: createTextService({ logger }),
     learn: createLearnService({ learnRepository, logger }),
-    nav: createNavService({ navRepository, logger }),
     pdf: createPdfService({ pdfEngine, workerClient: pdfWorkerClient, storage, logger }),
     handwriting: createHandwritingService({ storage, logger }),
     mediaSource: createMediaSourceService({ config, logger }),
   };
 
-  /* ---------- 后台定时任务 ---------- */
-  // 定期校验导航链接有效性，确保「网址导航」中的链接准确可用。
-  // 间隔可由环境变量 NAV_VERIFY_INTERVAL_MS 调整（默认 24 小时，0 表示关闭）。
-  const navVerifyMs = Number(process.env.NAV_VERIFY_INTERVAL_MS || 24 * 60 * 60 * 1000);
-  if (navVerifyMs > 0 && services.nav) {
-    setInterval(() => {
-      services.nav.verifyLinks().catch((e) => logger && logger.warn(`导航链接校验失败: ${e.message}`));
-    }, navVerifyMs);
-    if (logger) logger.info(`导航链接定时校验已启用，间隔 ${navVerifyMs / 3600000}h`);
-  }
-
-  return { storage, pdfWorkerClient, pdfEngine, learnRepository, navRepository, services };
+  return { storage, pdfWorkerClient, pdfEngine, learnRepository, services };
 }
 
 module.exports = { createContainer };

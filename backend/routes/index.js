@@ -8,7 +8,6 @@ const { createHealthRoutes } = require('./healthRoutes');
 const { createToolsRoutes } = require('./toolsRoutes');
 const { createLearnRoutes } = require('./learnRoutes');
 const { createPdfRoutes } = require('./pdfRoutes');
-const { createNavRoutes } = require('./navRoutes');
 const { createMediaRoutes } = require('./mediaRoutes');
 const { createNotFoundMiddleware } = require('../middlewares/notFound');
 
@@ -29,7 +28,6 @@ function createApiRouter({ services, storage, logger }) {
   }));
   router.use('/learn', createLearnRoutes({ learnService: services.learn, storage, logger }));
   router.use('/pdf', createPdfRoutes({ pdfService: services.pdf, storage, logger }));
-  router.use('/nav', createNavRoutes({ navService: services.nav, logger }));
   router.use('/media', createMediaRoutes({ mediaSourceService: services.mediaSource, logger }));
 
   // /api 下未匹配的请求统一 404（JSON）

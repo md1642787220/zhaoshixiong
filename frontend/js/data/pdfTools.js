@@ -264,7 +264,7 @@ export const PDF_TOOLS = [
     hint: '体制内文件外发前建议加“内部资料”水印。',
   },
   {
-    id: 'sanitize', name: '清理元数据', cat: 'security', icon: 'eraser',
+    id: 'sanitize', name: '清理文档信息', cat: 'security', icon: 'eraser',
     desc: '移除隐藏元数据与敏感信息', action: 'sanitize', multi: false,
     params: [
       { type: 'switch', name: 'removeMetadata', label: '清除文档元数据' },
@@ -311,7 +311,7 @@ export const PDF_TOOLS = [
     ],
   },
   {
-    id: 'change-metadata', name: '编辑元数据', cat: 'edit', icon: 'file-info',
+    id: 'change-metadata', name: '编辑文档信息', cat: 'edit', icon: 'file-info',
     desc: '修改标题、作者、主题等文档属性', action: 'change-metadata', multi: false,
     params: [
       { type: 'text', name: 'title', label: '标题' },

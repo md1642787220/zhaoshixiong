@@ -1,0 +1,162 @@
+/* ============================================================
+ * navhub.css - 「常用导航」页样式
+ * 要点：
+ *   1) 该页放宽容器，充分利用宽屏两侧空间（其余页面不受影响）
+ *   2) 交替网格自适应：窗口变化时自动增减列数
+ *   3) 每个一级分类带专属色相（--nh-accent），用于图标/选中态/悬停点缀
+ * ============================================================ */
+
+/* ---- 该页容器放宽（含导航条/页脚，保证左右边界对齐） ---- */
+body:has(.nh-layout) .container { width: min(96%, 1800px); }
+
+/* ============ 顶部搜索区 ============ */
+.nh-hero {
+  position: relative; overflow: hidden;
+  padding: 18px 20px; margin-bottom: 16px;
+  background:
+    radial-gradient(120% 180% at 0% 0%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 62%),
+    radial-gradient(120% 180% at 100% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 62%),
+    var(--surface);
+}
+.nh-hero-inner { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.nh-searchbox {
+  flex: 1; min-width: 260px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 16px;
+  background: color-mix(in srgb, #fff 72%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.nh-searchbox:focus-within { border-color: var(--primary); box-shadow: var(--ring); }
+.nh-search-icon { color: var(--text-muted); display: inline-flex; flex-shrink: 0; }
+.nh-search {
+  flex: 1; min-width: 0; border: 0; background: transparent; outline: none;
+  font-size: 15px; color: var(--text);
+}
+.nh-search::placeholder { color: var(--text-muted); }
+.nh-search:disabled { cursor: progress; }
+.nh-hero-meta { font-size: 12.5px; color: var(--text-muted); white-space: nowrap; }
+
+/* ============ 主体：左分类 + 右内容 ============ */
+.nh-layout {
+  display: grid;
+  grid-template-columns: 268px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+/* ---- 左：分类列表 ---- */
+.nh-cats {
+  padding: 8px;
+  display: flex; flex-direction: column; gap: 3px;
+  position: sticky; top: 86px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+.nh-cat {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px;
+  border: 0; border-radius: var(--radius-sm);
+  background: transparent; cursor: pointer;
+  font-size: 13.5px; color: var(--text-secondary); text-align: left;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.nh-cat:hover { background: var(--nh-accent-soft, var(--primary-light)); color: var(--text); transform: translateX(2px); }
+.nh-cat.active {
+  background: var(--nh-accent, var(--primary)); color: #fff;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--nh-accent, var(--primary)) 34%, transparent);
+}
+.nh-cat-icon {
+  width: 24px; height: 24px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 8px; background: var(--nh-accent-soft, var(--primary-light));
+  font-size: 13.5px; line-height: 1;
+}
+.nh-cat.active .nh-cat-icon { background: rgba(255, 255, 255, .26); }
+.nh-cat-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nh-cat-count {
+  flex-shrink: 0; font-size: 11px; color: var(--text-muted);
+  background: var(--surface-soft); border-radius: var(--radius-full); padding: 1px 7px;
+}
+.nh-cat.active .nh-cat-count { background: rgba(255, 255, 255, .26); color: #fff; }
+
+/* ---- 右：内容区 ---- */
+.nh-main {
+  min-width: 0;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.nh-main .empty { padding: 40px 0; text-align: center; color: var(--text-muted); }
+
+.nh-group {
+  padding: 14px 16px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition: border-color var(--dur) var(--ease);
+}
+.nh-group:hover { border-color: color-mix(in srgb, var(--nh-accent, var(--primary)) 45%, var(--border)); }
+.nh-group-title {
+  display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  margin: 0 0 12px; font-size: 14px; font-weight: 600; color: var(--text);
+}
+.nh-group-path { font-size: 11.5px; font-weight: 400; color: var(--text-muted); }
+.nh-dot {
+  width: 9px; height: 9px; flex-shrink: 0; border-radius: 50%;
+  background: var(--nh-accent, var(--primary));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--nh-accent, var(--primary)) 20%, transparent);
+}
+.nh-group-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nh-group-count {
+  font-size: 11.5px; font-weight: 400; color: var(--text-muted);
+  background: var(--surface-soft); border-radius: var(--radius-full); padding: 1px 8px;
+}
+
+/* ---- 站点网格：自适应列数 ---- */
+.nh-grid {
+  display: grid; gap: 9px;
+  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+}
+.nh-site {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 9px 11px; min-width: 0;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface) 92%, #fff);
+  text-decoration: none;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease),
+              transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.nh-site:hover {
+  border-color: var(--nh-accent, var(--primary));
+  background: var(--nh-accent-soft, var(--primary-light));
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--nh-accent, var(--primary)) 18%, transparent);
+}
+.nh-site-name { font-size: 13px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nh-site-cat { font-size: 11px; color: var(--nh-accent, var(--primary-dark)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nh-site-host { font-size: 11.5px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nh-more { margin-top: 4px; font-size: 12.5px; color: var(--text-muted); }
+
+/* ============ 响应式 ============ */
+/* 中屏：分类栏收窄 */
+@media (max-width: 1200px) {
+  .nh-layout { grid-template-columns: 232px minmax(0, 1fr); gap: 14px; }
+  .nh-grid { grid-template-columns: repeat(auto-fill, minmax(164px, 1fr)); }
+}
+/* 窄屏：单栏，分类横向滚动 */
+@media (max-width: 880px) {
+  .nh-layout { grid-template-columns: 1fr; }
+  .nh-cats {
+    position: static; max-height: none;
+    flex-direction: row; flex-wrap: nowrap; overflow-x: auto;
+    padding: 8px 6px;
+  }
+  .nh-cat { flex: 0 0 auto; }
+  .nh-cat-name { max-width: 44vw; }
+}
+/* 小屏：搜索区堆叠 */
+@media (max-width: 620px) {
+  .nh-hero-inner { flex-direction: column; align-items: stretch; gap: 10px; }
+  .nh-hero-meta { text-align: right; }
+  .nh-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+}

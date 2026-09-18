@@ -14,7 +14,7 @@ import shortcutsView from './shortcuts.js';
 import categoryView from './category.js';
 import postView from './post.js';
 import pdfToolView from './pdfTool.js';
-import navView from './nav.js';
+import navHubView from './navHub.js';
 
 /** @type {{path: string, view: object}[]} */
 export const views = [
@@ -30,5 +30,5 @@ export const views = [
   { path: '/learn/:id/post', view: postView },
   { path: '/pdf', view: pdfToolView },
   { path: '/pdf/:toolId', view: pdfToolView },
-  { path: '/nav', view: navView },
+  { path: '/nav', view: navHubView },
 ];

@@ -114,8 +114,18 @@ def export_xml(files, params):
     return send_file(out, "structure.xml", "application/xml")
 
 
+def _truthy(v):
+    """表单参数兼容 '1' / 'true' / 'on'（前端 switch 提交 '1'/'0'）。"""
+    return str(v).lower() in ("1", "true", "on", "yes") if v is not None else False
+
+
 @register("edit-bookmarks", desc="书签编辑器")
 def edit_bookmarks(files, params):
+    """书签（目录）编辑：auto=按页自动生成，replace=查找替换已有书签文本。
+
+    注意：pdf-lib（Node 端）不支持 outline，本工具必须由本 worker(PyMuPDF) 处理。
+    """
+    import re as _re
     p, _, _ = save_uploads(files)[0]
     mode = params.get("mode", "auto")
     doc = fitz.open(str(p))
@@ -126,9 +136,21 @@ def edit_bookmarks(files, params):
     else:
         find = params.get("find", "")
         replace = params.get("replace", "")
+        use_regex = _truthy(params.get("regex"))
         toc = doc.get_toc()
         for t in toc:
-            t[1] = t[1].replace(find, replace)
+            if not t[1]:
+                continue
+            if use_regex:
+                # 兼容 $1 / ${1}（JS / PDFPatcher 风格）与 \1 两种反向引用写法
+                repl = _re.sub(r"\$\{(\d+)\}", r"\\g<\1>", replace)
+                repl = _re.sub(r"\$(\d+)", r"\\g<\1>", repl)
+                try:
+                    t[1] = _re.sub(find, repl, t[1])
+                except _re.error:
+                    t[1] = t[1].replace(find, replace)
+            else:
+                t[1] = t[1].replace(find, replace)
         doc.set_toc(toc)
     out = new_tmp() / "bookmarks.pdf"
     doc.save(str(out))

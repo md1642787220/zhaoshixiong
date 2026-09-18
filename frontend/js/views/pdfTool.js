@@ -66,6 +66,7 @@ function renderParam(p, prefix = '') {
     case 'position-picker':
       // 上传 PDF 后自动加载预览；可拖动签名 + 右下角手柄/滚轮调大小
       inner = `<div class="position-picker" data-param="${p.name}">
+        <div class="picker-empty" style="padding:18px 14px;text-align:center;color:var(--text-muted);font-size:13px;line-height:1.6;border:1px dashed var(--border-strong);border-radius:var(--radius);background:#fafbfc;">上传 PDF 后，这里会显示页面预览，可直接把签名拖到目标位置</div>
         <div class="preview-stage" style="display:none;position:relative;margin-top:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:#fff;touch-action:none;">
           <img class="page-img" alt="PDF 页面预览" style="display:block;width:100%;user-select:none;-webkit-user-drag:none;">
           <img class="sig-overlay" alt="签名" style="display:none;position:absolute;cursor:move;user-select:none;-webkit-user-drag:none;border:1px dashed var(--primary);">
@@ -197,6 +198,10 @@ function setupPositionPicker(form, tool, dz) {
         }
       }
       stage.style.display = '';
+      if (pageImg.getAttribute('src')) {
+        const emptyEl = picker.querySelector('.picker-empty');
+        if (emptyEl) emptyEl.style.display = 'none';
+      }
     } catch { /* 预览加载失败可忽略 */ }
 
     // 2) 签名叠加（画完 / 选好后才显示）
@@ -608,7 +613,8 @@ export default {
     /* 4) 签名画板 / 上传预览 / 可视化定位（仅手写签名工具） */
     setupSignatureFeatures(form, tool, dz);
 
-    /* 4.5) 签名工具左右两栏：左 = 签名准备（画板/上传/方式/页码），右 = 预览 + 位置/大小 */
+    /* 4.5) 签名工具左右两栏：左 = 签名准备（画板/上传/方式/页码），右 = 位置/大小
+       注意：只遍历直接子字段，避免误选内层同样带 data-param 的 .position-picker */
     if (tool.action === 'sign') {
       const fields = form.querySelector('.form-fields');
       if (fields) {
@@ -617,11 +623,11 @@ export default {
         const right = document.createElement('div');
         right.className = 'sign-col sign-right';
         const leftNames = new Set(['mode', 'signaturePad', 'signFile', 'page']);
-        const rightNames = new Set(['positionPicker', 'x', 'y', 'scale']);
-        fields.querySelectorAll('[data-param]').forEach(el => {
+        const rightNames = new Set(['x', 'y', 'scale']);
+        [...fields.children].forEach((el) => {
           const n = el.getAttribute('data-param');
-          if (leftNames.has(n)) left.appendChild(el);
-          else if (rightNames.has(n)) right.appendChild(el);
+          if (n && leftNames.has(n)) left.appendChild(el);
+          else if (n && rightNames.has(n)) right.appendChild(el);
         });
         fields.classList.add('sign-layout');
         fields.appendChild(left);
@@ -629,9 +635,11 @@ export default {
       }
     }
 
-    /* 4.6) 手写签名：把「签名位置」定位区移到中栏预览区，获得更大的操作空间 */
+    /* 4.6) 手写签名：把「签名位置」定位区（外层 .field）移到中栏预览区，获得更大的操作空间。
+       必须用 .field 限定：内层 .position-picker 也带 data-param，否则只会移走空壳、
+       真正的预览区仍留在右栏（表现为中栏空白、看不到 PDF 预览） */
     if (tool.action === 'sign') {
-      const pickerField = form.querySelector('[data-param="positionPicker"]');
+      const pickerField = form.querySelector('.field[data-param="positionPicker"]');
       const mainEl = document.querySelector('.pdf-wb-main');
       if (pickerField && mainEl) {
         pickerField.classList.add('picker-in-main');
@@ -781,6 +789,9 @@ export default {
             a.download = data.filename || 'result';
             a.click();
           }
+        } else if (data.level === 'warn') {
+          // 非失败但需提醒的情况（如脱敏未匹配到任何关键词）
+          setStatus(statusEl, 'warn', data.message || '请注意');
         } else {
           // 后端未实现或处理失败
           setStatus(statusEl, 'err',

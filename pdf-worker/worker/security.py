@@ -94,20 +94,35 @@ def watermark(files, params):
 def redact(files, params):
     p, _, _ = save_uploads(files)[0]
     keywords = [k.strip() for k in params.get("keywords", "").split(",") if k.strip()]
+    if not keywords:
+        return {"ok": False, "level": "warn", "matched": 0,
+                "message": "请填写要遮盖的关键词后再处理。"}
     color = (0, 0, 0) if params.get("color", "black") == "black" else (1, 0, 0)
     doc = fitz.open(str(p))
+    matched = 0
     for page in doc:
         for kw in keywords:
-            for inst in page.search_for(kw):
-                page.add_redact_annot(inst, fill=color)
+            hits = page.search_for(kw)
+            if hits:
+                matched += len(hits)
+                for inst in hits:
+                    page.add_redact_annot(inst, fill=color)
         page.apply_redactions()
+    # 一个关键词都没匹配到：不生成文件，明确提示用户（避免「处理完成」的误导）
+    if matched == 0:
+        doc.close()
+        shown = "、".join(f"「{k}」" for k in keywords)
+        return {
+            "ok": False, "level": "warn", "matched": 0,
+            "message": f"未在文档中找到 {shown}，未做任何修改。请检查关键词是否与原文完全一致（注意简繁、空格与标点）。",
+        }
     out = new_tmp() / "redacted.pdf"
     doc.save(str(out))
     doc.close()
     return send_file(out, "redacted.pdf", "application/pdf")
 
 
-@register("sanitize", desc="清理元数据")
+@register("sanitize", desc="清理文档信息")
 def sanitize(files, params):
     p, _, _ = save_uploads(files)[0]
     doc = fitz.open(str(p))

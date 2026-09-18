@@ -1,0 +1,108 @@
+/* ============================================================
+ * download.css - 「视频素材下载」标签页样式
+ * 参考聚合解析式版式（输入区 + 说明条 + 三步引导 + 结果），
+ * 配色沿用本项目主题变量。
+ * ============================================================ */
+
+.vd-intro { margin-bottom: 10px; }
+.vd-intro h3 { margin: 0 0 4px; font-size: 15px; color: var(--text); }
+.vd-intro p { margin: 0; font-size: 12.5px; color: var(--text-muted); line-height: 1.7; }
+
+/* ---- 输入区 ---- */
+.vd-input-wrap {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.vd-input-wrap:focus-within { border-color: var(--primary); box-shadow: var(--ring); }
+.vd-textarea {
+  display: block; width: 100%; min-height: 64px;
+  border: 0; outline: none; resize: vertical;
+  font: inherit; font-size: 13.5px; line-height: 1.7;
+  color: var(--text); background: transparent;
+}
+.vd-textarea::placeholder { color: var(--text-muted); }
+.vd-input-bar {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px dashed var(--border);
+}
+.vd-bar-spacer { flex: 1; }
+
+/* ---- 说明条 ---- */
+.vd-note {
+  margin-top: 10px; padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--primary-light); color: var(--primary-dark);
+  font-size: 12.5px; line-height: 1.6;
+}
+
+/* ---- 三步引导 ---- */
+.vd-steps {
+  display: grid; gap: 10px; margin: 14px 0;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+.vd-step {
+  position: relative; padding: 12px 12px 12px 42px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface-soft);
+}
+.vd-step b { display: block; font-size: 13px; color: var(--text); margin-bottom: 2px; }
+.vd-step p { margin: 0; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+.vd-step-no {
+  position: absolute; left: 12px; top: 12px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--primary); color: #fff; font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ---- 常见问题 ---- */
+.vd-faq {
+  margin-top: 14px; padding: 10px 14px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+}
+.vd-faq summary { cursor: pointer; font-size: 13px; color: var(--text-secondary); }
+.vd-faq-body { margin-top: 6px; }
+.vd-faq-body p { margin: 6px 0; font-size: 12.5px; color: var(--text-secondary); line-height: 1.7; }
+.vd-faq-body b { color: var(--text); }
+
+/* ---- 解析失败项 ---- */
+.vd-error { border-color: color-mix(in srgb, var(--danger) 55%, var(--border)); }
+.vd-error-title { margin: 0; font-size: 13px; color: var(--danger); }
+.vd-error-url { margin: 4px 0 0; font-size: 12px; color: var(--text-muted); word-break: break-all; }
+
+/* ---- 平台图标墙 ---- */
+.vd-plats { margin-top: 18px; }
+.vd-plats-head { font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px; }
+.vd-plats-grid {
+  display: grid; gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+}
+.vd-plat {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 12px 7px 8px; min-width: 0;
+  border: 1px solid var(--border); border-radius: var(--radius-full);
+  background: var(--surface);
+  font-size: 12.5px; color: var(--text-secondary);
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease),
+              transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.vd-plat:hover {
+  border-color: var(--primary); background: var(--primary-light);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--primary) 14%, transparent);
+}
+.vd-plat.is-auto { border-color: color-mix(in srgb, var(--primary) 45%, var(--border)); background: var(--primary-light); color: var(--primary-dark); font-weight: 600; }
+.vd-plat-icon {
+  width: 22px; height: 22px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 7px; color: #fff;
+  font-size: 12px; font-weight: 700; line-height: 1;
+}
+.vd-plat-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 620px) {
+  .vd-plats-grid { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); }
+}
