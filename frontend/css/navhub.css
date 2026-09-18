@@ -118,14 +118,30 @@ body:has(.nh-layout) .container { width: min(96%, 1800px); }
   grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
 }
 .nh-site {
-  display: flex; flex-direction: column; gap: 2px;
-  padding: 9px 11px; min-width: 0;
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; min-width: 0;
   border: 1px solid var(--border); border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--surface) 92%, #fff);
   text-decoration: none;
   transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease),
               transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
 }
+.nh-site-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+
+/* 站点图标：favicon 加载失败时自动露出「首字母徽章」 */
+.nh-fav {
+  position: relative; flex-shrink: 0;
+  width: 22px; height: 22px; border-radius: 6px; overflow: hidden;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #fff; border: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  font-size: 11px; font-weight: 700; line-height: 1;
+  color: var(--nh-accent, var(--primary-dark));
+}
+.nh-fav-img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: contain; background: #fff;
+}
+.nh-fav-letter { user-select: none; }
 .nh-site:hover {
   border-color: var(--nh-accent, var(--primary));
   background: var(--nh-accent-soft, var(--primary-light));

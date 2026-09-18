@@ -5,6 +5,7 @@
  *
  * 布局：宽屏下放宽容器并自适应多列，每个一级分类有专属主题色，
  *       随窗口尺寸自动回流（详见 css/navhub.css）。
+ * 图标：每个站点优先显示站点自身 favicon；取不到则回退「首字母徽章」。
  * 数据量较大（3000+ 站点），故在 mount 时才动态 import。
  * ============================================================ */
 import { icon } from '../components/icon.js';
@@ -52,18 +53,52 @@ function hostOf(url) {
   try { return new URL(url).host.replace(/^www\./, ''); } catch { return url; }
 }
 
-/** 站点卡片 */
-function siteCard(s, catLabel = '') {
-  const tip = catLabel ? `${s.name}\n${s.url}\n分类：${catLabel}` : `${s.name}\n${s.url}`;
+/** 取站点 origin（用于拼 favicon 兜底地址） */
+function originOf(url) {
+  try { return new URL(url).origin; } catch { return ''; }
+}
+
+/** 取名称首字（跳过开头的 emoji / 装饰符号），作为无图标时的默认徽章 */
+function firstLetter(name) {
+  const s = String(name || '').replace(/^[^\p{L}\p{N}]+/u, '');
+  const m = s.match(/[\p{L}\p{N}]/u);
+  return m ? m[0].toUpperCase() : '·';
+}
+
+/**
+ * 站点卡片
+ * @param {object} s 站点 { name, url, favicon? , cat? }
+ * @param {boolean} showCat 是否显示所属分类（搜索结果用，取 s.cat）
+ */
+function siteCard(s, showCat = false) {
+  const root = originOf(s.url);
+  // 图标候选链：源数据 favicon → /favicon.ico → /favicon.svg → /favicon.png，全失败则用首字母
+  const chain = [...new Set([
+    s.favicon ? String(s.favicon) : '',
+    root ? `${root}/favicon.ico` : '',
+    root ? `${root}/favicon.svg` : '',
+    root ? `${root}/favicon.png` : '',
+  ].filter(Boolean))];
+  const src = chain[0] || '';
+  const rest = chain.slice(1).join('|');
+  const cat = showCat && s.cat ? s.cat : '';
+  const tip = cat ? `${s.name}\n${s.url}\n分类：${cat}` : `${s.name}\n${s.url}`;
+
   return `<a class="nh-site" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer" title="${esc(tip)}">
-    <span class="nh-site-name">${esc(s.name)}</span>
-    ${catLabel ? `<span class="nh-site-cat">${esc(catLabel)}</span>` : ''}
-    <span class="nh-site-host">${esc(hostOf(s.url))}</span>
+    <span class="nh-fav">
+      ${src ? `<img class="nh-fav-img" src="${esc(src)}"${rest ? ` data-chain="${esc(rest)}"` : ''} alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : ''}
+      <span class="nh-fav-letter" aria-hidden="true">${esc(firstLetter(s.name))}</span>
+    </span>
+    <span class="nh-site-body">
+      <span class="nh-site-name">${esc(s.name)}</span>
+      ${cat ? `<span class="nh-site-cat">${esc(cat)}</span>` : ''}
+      <span class="nh-site-host">${esc(hostOf(s.url))}</span>
+    </span>
   </a>`;
 }
 
 /** 一个分组：标题用分类自身名称，所属路径单独标注（层级归属更精准） */
-function groupHtml(title, sites, catLabel = '', pathLabel = '') {
+function groupHtml(title, sites, pathLabel = '', showCat = false) {
   if (!sites.length) return '';
   return `<section class="nh-group">
     <h3 class="nh-group-title">
@@ -72,8 +107,26 @@ function groupHtml(title, sites, catLabel = '', pathLabel = '') {
       ${pathLabel ? `<span class="nh-group-path">${esc(pathLabel)}</span>` : ''}
       <span class="nh-group-count">${sites.length}</span>
     </h3>
-    <div class="nh-grid">${sites.map((s) => siteCard(s, catLabel)).join('')}</div>
+    <div class="nh-grid">${sites.map((s) => siteCard(s, showCat)).join('')}</div>
   </section>`;
+}
+
+/**
+ * 图标加载失败时沿候选链依次重试（data-chain 为剩下的地址，'|' 分隔）；
+ * 全部失败则移除 <img>，露出底层的「首字母徽章」作为默认图标。
+ */
+function bindFavicons(root) {
+  root.querySelectorAll('img.nh-fav-img').forEach((img) => {
+    img.addEventListener('error', function onError() {
+      const rest = (img.dataset.chain || '').split('|').filter(Boolean);
+      if (rest.length) {
+        img.dataset.chain = rest.slice(1).join('|');
+        img.src = rest[0];
+        return;
+      }
+      img.remove();
+    });
+  });
 }
 
 /**
@@ -93,7 +146,7 @@ function categoryHtml(cat) {
   const groups = [];
   if (cat.sites && cat.sites.length) groups.push({ name: '综合', path: '', sites: cat.sites });
   (cat.children || []).forEach((ch) => collectGroups(ch, '', groups));
-  return groups.map((g) => groupHtml(g.name, g.sites, '', g.path)).join('')
+  return groups.map((g) => groupHtml(g.name, g.sites, g.path)).join('')
     || '<p class="empty">该分类暂无网站</p>';
 }
 
@@ -180,6 +233,7 @@ export default {
       mainEl.style.setProperty('--nh-accent', accentOf(idx));
       mainEl.style.setProperty('--nh-accent-soft', accentSoftOf(idx));
       mainEl.innerHTML = cat ? categoryHtml(cat) : '';
+      bindFavicons(mainEl);
     };
 
     catsEl.addEventListener('click', (e) => {
@@ -213,18 +267,9 @@ export default {
         const shown = hits.slice(0, LIMIT);
         mainEl.style.setProperty('--nh-accent', 'var(--primary)');
         mainEl.style.setProperty('--nh-accent-soft', 'var(--primary-light)');
-        mainEl.innerHTML = groupHtml('搜索结果', shown, '')
+        mainEl.innerHTML = groupHtml('搜索结果', shown, '', true)
           + (hits.length > LIMIT ? `<p class="nh-more">仅显示前 ${LIMIT} 条，共 ${hits.length} 条，请输入更精确的关键词</p>` : '');
-        // 搜索结果补上所属分类标签
-        const links = mainEl.querySelectorAll('.nh-site');
-        shown.forEach((s, i) => {
-          if (links[i]) {
-            const tag = document.createElement('span');
-            tag.className = 'nh-site-cat';
-            tag.textContent = s.cat;
-            links[i].insertBefore(tag, links[i].querySelector('.nh-site-host'));
-          }
-        });
+        bindFavicons(mainEl);
       }, 200);
     });
 
