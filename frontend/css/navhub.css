@@ -38,6 +38,35 @@ body:has(.nh-layout) .container { width: min(96%, 1800px); }
 .nh-search:disabled { cursor: progress; }
 .nh-hero-meta { font-size: 12.5px; color: var(--text-muted); white-space: nowrap; }
 
+/* ============ 分类说明条（内容区顶部：分类名 + 站点数 + 一句话简介） ============ */
+.nh-intro {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px; margin-bottom: 16px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--nh-accent, var(--primary));
+  border-radius: var(--radius-sm);
+  background: var(--nh-accent-soft, var(--primary-50));
+}
+.nh-intro-icon { font-size: 26px; line-height: 1.15; flex-shrink: 0; }
+.nh-intro-body { min-width: 0; }
+.nh-intro-name {
+  margin: 0 0 5px; font-size: 16px; font-weight: 700; color: var(--text);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.nh-intro-count {
+  font-size: 12px; font-weight: 600; color: var(--nh-accent, var(--primary));
+  background: color-mix(in srgb, #fff 72%, transparent);
+  border-radius: var(--radius-full); padding: 2px 10px;
+}
+.nh-intro-desc { margin: 0; font-size: 13px; line-height: 1.65; color: var(--text-secondary); }
+
+@media (max-width: 760px) {
+  .nh-intro { padding: 12px 13px; gap: 9px; }
+  .nh-intro-icon { font-size: 22px; }
+  .nh-intro-name { font-size: 15px; }
+  .nh-intro-desc { font-size: 12.5px; }
+}
+
 /* ============ 主体：左分类 + 右内容 ============ */
 .nh-layout {
   display: grid;

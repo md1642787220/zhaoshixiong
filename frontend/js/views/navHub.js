@@ -48,6 +48,35 @@ function iconFor(name, fallback) {
   return f && f !== '📁' ? f : '📌';
 }
 
+/**
+ * 一级分类简介：一句话说明该分类收录什么，先看懂再点进去。
+ * 与图标规则同理按关键词匹配，且「越具体越靠前」——
+ * 例如「设计／影视后期」必须先于「影视」命中，否则会被后者的规则抢走。
+ */
+const CAT_DESC_RULES = [
+  { re: /设计|后期/, desc: '设计素材、图片处理与影视后期软件资源' },
+  { re: /考证|考级/, desc: '教师资格、考研、公考及各类等级考试的备考资料' },
+  { re: /电子书|漫画|音乐|听书/, desc: '电子书、漫画、音乐与有声书的阅读和试听站点' },
+  { re: /磁力|BT/i, desc: 'BT / 磁力资源搜索入口，内容良莠不齐，请自行甄别' },
+  { re: /AI/i, desc: '对话、绘画、写作、编程等热门 AI 工具合集' },
+  { re: /影视|动漫|直播|纪录/, desc: '影视剧集、动漫、直播与纪录片的在线观看和资源索引' },
+  { re: /电脑/, desc: 'Windows / macOS 常用软件下载与系统维护工具' },
+  { re: /手机/, desc: '安卓 / iOS 应用下载、玩机与刷机工具' },
+  { re: /学习/, desc: '公开课、教程、题库与技能提升平台' },
+  { re: /实用导航/, desc: '聚合型导航站与网址大全入口' },
+  { re: /冷门/, desc: '小众但实用的宝藏网站，值得慢慢挖掘' },
+  { re: /常用网站/, desc: '日常高频使用的综合门户与生活服务网站' },
+  { re: /工具|查询/, desc: '在线工具与查询类站点：格式转换、计算、信息检索等' },
+  { re: /游戏|解压|摸鱼/, desc: '休闲小游戏、解压玩具与摸鱼站点' },
+  { re: /福利|资源/, desc: '综合资源站点合集' },
+];
+
+/** 取分类简介：命中关键词规则，否则给一句兜底说明 */
+function descFor(name) {
+  const hit = CAT_DESC_RULES.find((r) => r.re.test(name));
+  return hit ? hit.desc : '该分类下的精选网站，点击卡片即可访问。';
+}
+
 /** 取站点域名用于展示 */
 function hostOf(url) {
   try { return new URL(url).host.replace(/^www\./, ''); } catch { return url; }
@@ -150,6 +179,17 @@ function categoryHtml(cat) {
     || '<p class="empty">该分类暂无网站</p>';
 }
 
+/** 分类说明条：分类名 + 站点数 + 一句话简介（置于该分类内容区顶部） */
+function catIntroHtml(cat) {
+  return `<div class="nh-intro">
+    <span class="nh-intro-icon" aria-hidden="true">${esc(iconFor(cat.name, cat.icon))}</span>
+    <div class="nh-intro-body">
+      <h2 class="nh-intro-name">${esc(cat.name)}<span class="nh-intro-count">${cat.count} 个站点</span></h2>
+      <p class="nh-intro-desc">${esc(descFor(cat.name))}</p>
+    </div>
+  </div>`;
+}
+
 /** 递归收集全部站点，附带所属分类路径（用于搜索） */
 function flattenAll(categories) {
   const out = [];
@@ -220,6 +260,7 @@ export default {
     /** 渲染左侧分类（每个分类带专属色相） */
     catsEl.innerHTML = NAVHUB.categories.map((c, i) => `
       <button type="button" class="nh-cat${c.id === activeId ? ' active' : ''}" data-cat="${esc(c.id)}"
+        title="${esc(descFor(c.name))}"
         style="--nh-accent:${accentOf(i)};--nh-accent-soft:${accentSoftOf(i)}">
         <span class="nh-cat-icon">${esc(iconFor(c.name, c.icon))}</span>
         <span class="nh-cat-name">${esc(c.name)}</span>
@@ -232,7 +273,7 @@ export default {
       const cat = NAVHUB.categories[idx];
       mainEl.style.setProperty('--nh-accent', accentOf(idx));
       mainEl.style.setProperty('--nh-accent-soft', accentSoftOf(idx));
-      mainEl.innerHTML = cat ? categoryHtml(cat) : '';
+      mainEl.innerHTML = cat ? catIntroHtml(cat) + categoryHtml(cat) : '';
       bindFavicons(mainEl);
     };
 
