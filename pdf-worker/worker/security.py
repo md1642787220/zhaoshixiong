@@ -1,4 +1,5 @@
 """安全与签名类：加密/解密/权限/水印/脱敏/签名(pyHanko)。"""
+import re
 import fitz  # PyMuPDF
 from pathlib import Path
 from pypdf import PdfReader, PdfWriter
@@ -120,6 +121,114 @@ def redact(files, params):
     doc.save(str(out))
     doc.close()
     return send_file(out, "redacted.pdf", "application/pdf")
+
+
+# ---------- 智能脱敏：自动识别 + 掩码式遮盖 ----------
+# 识别规则按「从具体到宽泛」排列。身份证（18位）同时满足银行卡的 15-19 位规则，
+# 因此命中后按字符串去重，同一串只处理一次。
+#
+# 掩码规则参考 red.zyc:desensitization（Apache-2.0）的默认策略：它不是把敏感信息
+# 整块涂黑，而是「保留关键位 + 其余打码」，脱敏后的文档依然读得懂上下文。
+# 这里一律按位替换成 '*'，因此**掩码串与原串等长**，不会影响原有排版。
+
+
+def _mask_keep(head, tail=0, ch="*"):
+    """保留开头 head 位与结尾 tail 位，中间按位替换（等长）。"""
+
+    def f(s):
+        n = len(s)
+        if n <= head + tail:
+            return ch * n
+        return s[:head] + ch * (n - head - tail) + (s[n - tail:] if tail else "")
+
+    return f
+
+
+def _mask_tail(tail, ch="*"):
+    """只保留结尾 tail 位（银行卡：不泄露任何前缀）。"""
+
+    def f(s):
+        n = len(s)
+        if n <= tail:
+            return ch * n
+        return ch * (n - tail) + s[n - tail:]
+
+    return f
+
+
+def _mask_email(s, ch="*"):
+    """保留 @ 前的首字符与整个域名：123456@qq.com -> 1*****@qq.com"""
+    at = s.find("@")
+    if at <= 1:
+        return ch * len(s)
+    return s[0] + ch * (at - 1) + s[at:]
+
+
+AUTO_RULES = [
+    ("idcard", "身份证号", re.compile(r"[1-9]\d{5}(?:19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\d{3}[\dXx]"), _mask_keep(6, 4)),
+    ("phone", "手机号", re.compile(r"(?<!\d)1[3-9]\d{9}(?!\d)"), _mask_keep(3, 4)),
+    ("bank", "银行卡号", re.compile(r"(?<!\d)\d{15,19}(?!\d)"), _mask_tail(4)),
+    ("email", "邮箱", re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}"), _mask_email),
+    ("tel", "固定电话", re.compile(r"(?<!\d)0\d{2,3}-?\d{7,8}(?!\d)"), _mask_keep(3, 4)),
+]
+
+
+@register("auto-redact", desc="智能脱敏")
+def auto_redact(files, params):
+    """自动识别并永久遮盖常见敏感信息：身份证 / 手机号 / 银行卡 / 邮箱 / 固定电话。
+
+    与「内容脱敏」的区别：无需手工填写关键词，直接按规则扫描 PDF 文本层。
+    注意：仅对**文字型 PDF** 有效；扫描件需先做 OCR 再脱敏。
+
+    style 参数：
+      partial（默认）按类型套用掩码规则做「部分保留」，遮盖处写入等长的掩码文本
+                     （如 199****0001、1*****@qq.com），文档脱敏后仍然可读；
+      full           整块涂色、不写入任何文字，不泄露原文字数与结构。
+    两种方式都会调用 apply_redactions() **真正删除**原文字，不可恢复。
+    """
+    p, _, _ = save_uploads(files)[0]
+    chosen = [r for r in AUTO_RULES if params.get(r[0]) in ("true", True, "1", "on")]
+    if not chosen:
+        return {"ok": False, "level": "warn",
+                "message": "请至少勾选一类要识别的敏感信息（身份证 / 手机号 / 银行卡 / 邮箱 / 固定电话）。"}
+    partial = params.get("style", "partial") != "full"
+    color = (0, 0, 0) if params.get("color", "black") == "black" else (1, 0, 0)
+
+    doc = fitz.open(str(p))
+    stats = {}
+    for page in doc:
+        text = page.get_text()
+        tokens = {}          # 原文 -> 掩码文本（同一个串只保留一份）
+        for key, label, rx, masker in chosen:
+            found = rx.findall(text)
+            if found:
+                stats[label] = stats.get(label, 0) + len(found)
+                for s in found:
+                    tokens.setdefault(s, masker(s))
+        # 先收集完本页所有位置再统一加遮盖，避免边找边改导致漏匹配
+        for s, masked in tokens.items():
+            for rect in page.search_for(s):
+                if partial:
+                    # 掩码串与原串等长；字号按矩形高度推算，避免明显溢出或过小
+                    fs = max(6.0, min(20.0, rect.height * 0.72))
+                    page.add_redact_annot(rect, text=masked, fontname="helv",
+                                          fontsize=fs, align=0,
+                                          fill=(1, 1, 1), text_color=(0, 0, 0))
+                else:
+                    page.add_redact_annot(rect, fill=color)
+        page.apply_redactions()
+
+    total = sum(stats.values())
+    if total == 0:
+        doc.close()
+        return {"ok": False, "level": "warn", "matched": 0,
+                "message": "未识别到所选类型的敏感信息，未做任何修改。"
+                           "（若文件是扫描件/图片型 PDF，其文本层为空，请先做 OCR 文字识别）"}
+
+    out = new_tmp() / "auto-redacted.pdf"
+    doc.save(str(out))
+    doc.close()
+    return send_file(out, f"已脱敏-共{total}处.pdf", "application/pdf")
 
 
 @register("sanitize", desc="清理文档信息")

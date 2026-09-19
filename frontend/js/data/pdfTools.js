@@ -281,6 +281,25 @@ export const PDF_TOOLS = [
     ],
     hint: '脱敏为不可逆操作，请确认后再下载。',
   },
+  {
+    id: 'auto-redact', name: '智能脱敏', cat: 'security', icon: 'shield',
+    desc: '自动识别并遮盖身份证、手机号、银行卡等敏感信息', action: 'auto-redact', multi: false,
+    params: [
+      { type: 'switch', name: 'idcard', label: '身份证号', value: true },
+      { type: 'switch', name: 'phone', label: '手机号', value: true },
+      { type: 'switch', name: 'bank', label: '银行卡号', value: true },
+      { type: 'switch', name: 'email', label: '邮箱地址' },
+      { type: 'switch', name: 'tel', label: '固定电话' },
+      {
+        type: 'select', name: 'style', label: '脱敏样式', options: [
+          ['partial', '部分保留（如 199****0001，文档仍可读）'],
+          ['full', '完全遮盖（纯色块，不泄露任何信息）'],
+        ],
+      },
+      { type: 'select', name: 'color', label: '遮盖颜色', options: [['black', '黑'], ['red', '红']] },
+    ],
+    hint: '「部分保留」按类型套用掩码规则：手机号 199****0001、身份证 110101********7758、银行卡 ************0123、邮箱 1*****@qq.com —— 掩码与原文字等长，不影响排版，脱敏后仍能读懂上下文。「完全遮盖」则只涂色、不写任何文字。两种方式都会真正删除原文（不可恢复）；仅对文字型 PDF 有效，扫描件请先用「OCR 文字识别」转成文字层。',
+  },
   /* ===================== 内容与编辑 Content & Editing ===================== */
   {
     id: 'add-attachments', name: '添加附件', cat: 'edit', icon: 'paperclip',
