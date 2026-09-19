@@ -42,6 +42,31 @@ export const mediaApi = {
   },
 
   /**
+   * 构造「合并下载」地址：由服务端用 yt-dlp 挑选同清晰度视频流 + 最佳音频流，
+   * 再用 ffmpeg 合并为带音轨的 MP4。
+   *
+   * 用于 DASH 音视频分离的平台（B站 / YouTube 等）：这些平台的视频流本身不含声音，
+   * 直接下载直链会得到无声文件 —— 走本接口才能拿到正常带声音的视频。
+   *
+   * @param {{url: string, height?: number}} item 解析结果中的视频下载项
+   * @param {string} filename 保存文件名（含扩展名）
+   * @param {string} pageRef 来源页面地址（yt-dlp 据此重新挑选视频流 + 音频流）
+   * @param {number|null} start 片段开始秒数（可选）
+   * @param {number|null} end 片段结束秒数（可选）
+   */
+  mergedDownloadUrl(item, filename, pageRef = '', start = null, end = null) {
+    const qs = new URLSearchParams({
+      url: item.url || '',
+      ref: pageRef || '',
+      filename,
+      height: String(item.height || 0),
+    });
+    if (start != null && !Number.isNaN(start)) qs.set('start', String(start));
+    if (end != null && !Number.isNaN(end)) qs.set('end', String(end));
+    return `${API}${API_BASE}/media/download-merged?${qs.toString()}`;
+  },
+
+  /**
    * 构造代理下载地址（直链常带防盗链/跨域限制，统一走后端代理）
    * @param {{url: string}} item 解析结果中的下载项
    * @param {string} filename 保存文件名（含扩展名）

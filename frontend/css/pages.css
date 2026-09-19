@@ -74,7 +74,6 @@
   background: #000; border-radius: var(--radius-md); border: 1px solid var(--border);
 }
 .media-preview[hidden] { display: none; }
-.ms-clip-note { font-size: 12.5px; margin: -4px 0 12px; }
 
 /* ============ 工具详情页布局 ============ */
 .tool-layout { display: grid; grid-template-columns: 226px 1fr; gap: 22px; align-items: start; }

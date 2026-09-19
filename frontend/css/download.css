@@ -74,6 +74,27 @@
 .vd-error-title { margin: 0; font-size: 13px; color: var(--danger); }
 .vd-error-url { margin: 4px 0 0; font-size: 12px; color: var(--text-muted); word-break: break-all; }
 
+/* ---- 超长链接自动换行 ----
+   解析失败提示里常带完整 URL（小红书等平台的链接含 xsec_token 等参数，
+   动辄数百个字符），不允许断行时会溢出卡片、甚至把页面撑出横向滚动条。
+   overflow-wrap: anywhere 允许在任意位置断行（含无空格的长串），
+   word-break: break-all 作为兼容兜底。 */
+.vd-error-title,
+.vd-error-url,
+#vd-status,
+#ms-status {
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+/* 结果容器与卡片不允许被长内容撑宽：宽度始终受父容器约束，
+   配合上面的断行规则，长链接才会在卡片内部折行而不是向外溢出。 */
+#vd-result,
+#ms-result,
+.ms-result-card {
+  min-width: 0;
+  max-width: 100%;
+}
+
 /* ---- 平台图标墙 ---- */
 .vd-plats { margin-top: 18px; }
 .vd-plats-head { font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px; }

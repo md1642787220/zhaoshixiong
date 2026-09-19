@@ -27,51 +27,11 @@ function fmtDuration(seconds) {
   return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
 }
 
-/** 解析时间输入："90" / "00:01:30" / "1:30" -> 秒数，空或非法返回 null */
-function parseTimeInput(v) {
-  v = (v || '').trim();
-  if (!v) return null;
-  if (!/^\d{1,3}(:\d{1,2}){0,2}(\.\d+)?$/.test(v)) return null;
-  return v.split(':').reduce((acc, x) => acc * 60 + parseFloat(x), 0);
-}
-
-/** 读取剪辑输入框原始值（不校验大小关系） */
-function readClipValues(startId, endId) {
-  return {
-    start: parseTimeInput($(startId).value),
-    end: parseTimeInput($(endId).value),
-  };
-}
-
-/** 读取并校验剪辑起止时间 */
-function readClipRange(startId, endId) {
-  const { start, end } = readClipValues(startId, endId);
-  if (start != null && end != null && end <= start) {
-    throw new Error('结束时间必须大于开始时间');
-  }
-  return { start, end };
-}
-
 /** 从解析出的视频列表里挑一个适合预览的直链 */
 function pickPreviewUrl(videos) {
   if (!videos || !videos.length) return '';
   const playable = videos.find((it) => it.hasAudio && it.height && it.height <= 1080) || videos[0];
   return playable ? playable.url : '';
-}
-
-/** 剪辑时间输入控件 HTML */
-function clipInputs(prefix) {
-  return `
-  <div class="time-row">
-    <div class="field">
-      <label>开始时间（可留空，提取整段）</label>
-      <input id="${prefix}-start" class="input" placeholder="如 90 或 00:01:30">
-    </div>
-    <div class="field">
-      <label>结束时间（可留空）</label>
-      <input id="${prefix}-end" class="input" placeholder="如 150 或 00:02:30">
-    </div>
-  </div>`;
 }
 
 /** 视频预览区 HTML */
@@ -91,7 +51,6 @@ function extractPanel() {
   </div>
   <p class="fileinfo" id="au-info">尚未选择文件</p>
   ${previewArea('au-video')}
-  ${clipInputs('au')}
   <button class="btn btn-primary" id="au-btn" disabled>提取音频（浏览器本地处理）</button>
   <div class="status" id="au-status"></div>
   <div id="au-result"></div>`;
@@ -175,7 +134,7 @@ function clipPanel() {
   </div>
 
   ${previewArea('vd-video')}
-  ${clipInputs('vd')}
+
   <div class="status" id="vd-status"></div>
   <div id="vd-result"></div>
 
@@ -210,7 +169,6 @@ function sourcePanel() {
     </p>
   </div>
   ${previewArea('ms-video')}
-  ${clipInputs('ms')}
   <div class="status" id="ms-status"></div>
   <div id="ms-result"></div>`;
 }
@@ -272,16 +230,13 @@ function bindExtract() {
 
   btn.addEventListener('click', async () => {
     if (!file) return;
-    let range;
-    try { range = readClipRange('#au-start', '#au-end'); }
-    catch (e) { setStatus(status, 'err', e.message); return; }
 
     setStatus(status, 'processing', '正在上传并提取音频，请稍候…');
     btn.disabled = true;
     result.innerHTML = '';
     if (resultUrl) { URL.revokeObjectURL(resultUrl); resultUrl = null; }
     try {
-      const blob = await mediaApi.extractAudio(file, range.start, range.end);
+      const blob = await mediaApi.extractAudio(file);
       const fname = `${stripExt(file.name) || 'audio'}-音频.mp3`;
       resultUrl = URL.createObjectURL(blob);
       result.innerHTML = `
@@ -309,16 +264,15 @@ function bindClip() {
   const steps = $('#vd-steps');
   /** 解析结果项：成功为解析数据，失败为 { url, error } */
   let items = [];
-
+  /** 绘制进度条上的「选中区间」高亮，并刷新下方提示文案 */
   function render() {
     if (!items.length) return;
-    const { start, end } = readClipValues('#vd-start', '#vd-end');
     result.innerHTML = items.map((it) => (it.error
       ? `<div class="ms-result-card vd-error">
            <p class="vd-error-title">解析失败：${esc(it.error)}</p>
            <p class="vd-error-url">${esc(it.url)}</p>
          </div>`
-      : renderVideoResult(it, start, end))).join('');
+      : renderVideoResult(it))).join('');
   }
 
   /** 从输入框提取链接：每行一个，行内自动截取 http(s) 链接（兼容分享文本） */
@@ -378,7 +332,7 @@ function bindClip() {
 
     btn.disabled = false;
     btn.textContent = '解析';
-    if (ok) setStatus(status, 'ok', `解析完成：成功 ${ok} / ${links.length} 条，选择时间段后点击下载`);
+    if (ok) setStatus(status, 'ok', `解析完成：成功 ${ok} / ${links.length} 条，选择清晰度即可下载`);
     else setStatus(status, 'err', '全部解析失败，请检查链接是否正确或稍后重试');
   }
 
@@ -396,8 +350,6 @@ function bindClip() {
     }
   });
 
-  $('#vd-start').addEventListener('input', render);
-  $('#vd-end').addEventListener('input', render);
   btn.addEventListener('click', resolveAll);
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); resolveAll(); }
@@ -413,20 +365,30 @@ function safeName(name) {
 }
 
 /** 渲染解析结果：素材信息 + 音频/视频两组下载项 */
-function renderSourceResult(data, start = null, end = null) {
+function renderSourceResult(data) {
   const meta = [
     data.uploader ? `作者：${data.uploader}` : '',
     data.duration ? `时长：${fmtDuration(data.duration)}` : '',
   ].filter(Boolean).join(' · ');
 
-  const clipNote = (start != null || end != null)
-    ? `<p class="ms-clip-note muted">已设置下载片段：${fmtDuration(start || 0)} - ${end != null ? fmtDuration(end) : '结束'}</p>`
+  // B站 / YouTube 等采用 DASH 音视频分离：视频流本身不含声音，音频是独立的一条。
+  // 明确提示用户，避免误以为「视频损坏」或「工具不支持」。
+  const hasVideoOnly = (data.videos || []).some((it) => it.hasAudio === false);
+  const dashTip = hasVideoOnly
+    ? `<p class="ms-clip-note muted">说明：该平台把画面与声音分开存储（DASH），视频流本身不含音轨。下方视频项点击后会由服务端自动挑选并合并音轨（需先下载再合并，文件越大等待越久）；音频也可在下方单独下载。</p>`
     : '';
 
-  const list = (items, kind) => (items || []).map(it => `
+  const list = (items, kind) => (items || []).map(it => {
+    // 视频流若本身无音轨（DASH 分离流），改走服务端「合并下载」：
+    // 由 yt-dlp 挑同清晰度视频 + 最佳音频，再用 ffmpeg 合并，避免下载到无声文件。
+    const merged = kind === 'video' && it.hasAudio === false;
+    const href = merged
+      ? mediaApi.mergedDownloadUrl(it, `${safeName(data.title)}.mp4`, data.pageUrl)
+      : mediaApi.downloadUrl(it, `${safeName(data.title)}.${it.ext}`, data.pageUrl);
+    return `
     <a
       class="ms-dl-item"
-      href="${mediaApi.downloadUrl(it, `${safeName(data.title)}.${it.ext}`, data.pageUrl, start, end)}"
+      href="${href}"
       download
       target="_blank"
       rel="noopener"
@@ -434,7 +396,8 @@ function renderSourceResult(data, start = null, end = null) {
       ${icon(kind === 'audio' ? 'music' : 'film', 16)}
       <span class="ms-dl-label">${it.label}</span>
       <span class="ms-dl-go">${icon('download', 16)}</span>
-    </a>`).join('');
+    </a>`;
+  }).join('');
 
   return `
   <div class="ms-result-card">
@@ -445,7 +408,7 @@ function renderSourceResult(data, start = null, end = null) {
         ${meta ? `<p class="ms-meta muted">${meta}</p>` : ''}
       </div>
     </div>
-    ${clipNote}
+    ${dashTip}
     ${(data.audios || []).length ? `
       <div class="ms-group">
         <div class="ms-group-title">${icon('music', 15)} 音频下载</div>
@@ -459,45 +422,11 @@ function renderSourceResult(data, start = null, end = null) {
   </div>`;
 }
 
-/** 渲染视频解析结果：只展示视频下载项 */
-function renderVideoResult(data, start = null, end = null) {
-  const meta = [
-    data.uploader ? `作者：${data.uploader}` : '',
-    data.duration ? `时长：${fmtDuration(data.duration)}` : '',
-  ].filter(Boolean).join(' · ');
-
-  const clipNote = (start != null || end != null)
-    ? `<p class="ms-clip-note muted">已设置下载片段：${fmtDuration(start || 0)} - ${end != null ? fmtDuration(end) : '结束'}</p>`
-    : '';
-
-  const list = (data.videos || []).map(it => `
-    <a
-      class="ms-dl-item"
-      href="${mediaApi.downloadUrl(it, `${safeName(data.title)}.${it.ext}`, data.pageUrl, start, end)}"
-      download
-      target="_blank"
-      rel="noopener"
-    >
-      ${icon('film', 16)}
-      <span class="ms-dl-label">${it.label}</span>
-      <span class="ms-dl-go">${icon('download', 16)}</span>
-    </a>`).join('');
-
-  return `
-  <div class="ms-result-card">
-    <div class="ms-result-head">
-      ${data.thumbnail ? `<img class="ms-thumb" src="${data.thumbnail}" alt="" loading="lazy" onerror="this.remove()">` : ''}
-      <div class="ms-result-info">
-        <h3 class="ms-title">${data.title || '未命名素材'}</h3>
-        ${meta ? `<p class="ms-meta muted">${meta}</p>` : ''}
-      </div>
-    </div>
-    ${clipNote}
-    <div class="ms-group">
-      <div class="ms-group-title">${icon('film', 15)} 视频下载</div>
-      ${list}
-    </div>
-  </div>`;
+/** 渲染视频解析结果（保留函数名以兼容调用处）：
+ *  统一委托给 renderSourceResult —— 原实现只循环 data.videos、整块丢弃音频，
+ *  导致 B站/YouTube 这类 DASH 分离流的页面里看不到任何音频项。 */
+function renderVideoResult(data) {
+  return renderSourceResult(data);
 }
 
 function bindSource() {
@@ -510,8 +439,7 @@ function bindSource() {
 
   function render() {
     if (!resolved) return;
-    const { start, end } = readClipValues('#ms-start', '#ms-end');
-    result.innerHTML = renderSourceResult(resolved, start, end);
+    result.innerHTML = renderSourceResult(resolved);
   }
 
   /** 解析：校验 → 请求 → 渲染 */
@@ -551,7 +479,7 @@ function bindSource() {
         };
       }
       render();
-      setStatus(status, 'ok', `解析完成：音频 ${audios.length} 项 / 视频 ${videos.length} 项，选择时间段后点击下载`);
+      setStatus(status, 'ok', `解析完成：音频 ${audios.length} 项 / 视频 ${videos.length} 项，点击即可下载`);
     } catch (e) {
       setStatus(status, 'err', e.message || '解析失败，请稍后重试');
     } finally {
@@ -559,8 +487,6 @@ function bindSource() {
     }
   }
 
-  $('#ms-start').addEventListener('input', render);
-  $('#ms-end').addEventListener('input', render);
   btn.addEventListener('click', resolve);
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') resolve();

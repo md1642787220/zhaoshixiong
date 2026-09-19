@@ -258,7 +258,9 @@ def _pick_formats(formats):
             has_audio = acodec != "none"
             key = (h, ext, has_audio)
             res = f"{h}p" + (f"{fps}" if fps and fps > 30 else "")
-            label = f"{res} {ext.upper()}" + ("（含音轨）" if has_audio else "（无音轨）")
+            # 无音轨 = 平台的 DASH 分离视频流。前端会对这类项改走「合并下载」
+            # （yt-dlp 配最佳音频流 + ffmpeg 合并），故标注为「自动合并音轨」而非「无音轨」。
+            label = f"{res} {ext.upper()}" + ("（含音轨）" if has_audio else "（自动合并音轨）")
             if size:
                 label += f" · {_fmt_size(size)}"
             item = {
@@ -508,6 +510,85 @@ async def media_download(
         headers={"Content-Disposition": cd},
         background=BackgroundTask(_close),
     )
+
+
+@app.get("/api/media/download-merged")
+async def media_download_merged(
+    url: str = Query(""),
+    ref: str = Query(""),
+    height: int = Query(0),
+    filename: str = Query("merged.mp4"),
+    start: str = Query(""),
+    end: str = Query(""),
+):
+    """合并下载：把 DASH 分离的视频流与音频流下载后用 ffmpeg 合并成带音轨的 MP4。
+
+    与 /api/media/download 的区别：
+      - 该端点「始终」走 yt-dlp（从页面地址挑选格式），所以即使不裁剪也能拿到有声音的文件；
+      - 原来不裁剪时代理纯视频流直链，是 B站/YouTube 等平台下载下来没声音的原因；
+      - height>0 时按该清晰度上限挑选视频流，并配最佳音频流。
+    """
+    target = ref or url
+    if not _URL_RE.match(target or ""):
+        return JSONResponse(status_code=400, content={"ok": False, "message": "非法下载地址"})
+
+    import tempfile, os, shutil, yt_dlp
+    tmpdir = tempfile.mkdtemp()
+    out_tpl = os.path.join(tmpdir, "merged.%(ext)s")
+    loop = asyncio.get_running_loop()
+
+    def run():
+        h = max(0, int(height or 0))
+        if h:
+            # 兜底不能只写 /best：B站这类站的 best 要求「单条 format 同时含音视频」，
+            # 在 DASH 分离流场景下会直接报 "Requested format is not available"。
+            # 因此优先级：指定清晰度视频+音频 → 任意最佳视频+音频 → best。
+            fmt = (f"bestvideo[height<={h}]+bestaudio/"
+                   f"bestvideo+bestaudio/best")
+        else:
+            fmt = "bestvideo+bestaudio/best"
+        opts = {
+            "quiet": True,
+            "no_warnings": True,
+            "noplaylist": True,
+            "socket_timeout": 30,
+            "http_headers": {"User-Agent": _UA},
+            "format": fmt,
+            "merge_output_format": "mp4",
+            "outtmpl": out_tpl,
+        }
+        s, e = _to_seconds(start), _to_seconds(end)
+        if s is not None and e is not None and e > s:
+            opts["download_sections"] = [f"*{s}-{e}"]
+            opts["force_keyframes_at_cuts"] = True
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            ydl.download([target])
+        files = [f for f in os.listdir(tmpdir) if f.startswith("merged.")]
+        if not files:
+            raise RuntimeError("未生成合并文件")
+        files.sort(key=lambda f: (not f.endswith(".mp4"), f))
+        return os.path.join(tmpdir, files[0])
+
+    try:
+        path = await loop.run_in_executor(None, run)
+    except Exception as e:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+        return JSONResponse(status_code=500, content={"ok": False, "message": f"合并下载失败：{str(e)}"})
+
+    mime = mimetypes.guess_type(path)[0] or "video/mp4"
+    cd = f"attachment; filename*=UTF-8''{quote(filename)}"
+
+    async def iter_file():
+        with open(path, "rb") as f:
+            while True:
+                chunk = f.read(256 * 1024)
+                if not chunk:
+                    break
+                yield chunk
+        os.remove(path)
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+    return StreamingResponse(iter_file(), media_type=mime, headers={"Content-Disposition": cd})
 
 
 if __name__ == "__main__":

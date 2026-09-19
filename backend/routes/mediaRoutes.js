@@ -62,6 +62,46 @@ function createMediaRoutes({ mediaSourceService, logger }) {
     Readable.fromWeb(workerRes.body).pipe(res);
   }));
 
+  /**
+   * 合并下载：DASH 分离流（视频流本身不含音轨）交由 worker 用 yt-dlp 挑流 + ffmpeg 合并。
+   * 与 /download 的区别：那条在「未裁剪」时只是代理纯视频流直链，拿到的文件没有声音。
+   */
+  router.get('/download-merged', asyncHandler(async (req, res) => {
+    const { url, ref, height, filename, start, end } = req.query;
+    if (!url && !ref) throw new BadRequestError('缺少下载地址');
+
+    const base = mediaSourceService.workerBase;
+    if (!base) throw new BadRequestError('未配置 PDF_WORKER_URL，无法下载');
+
+    const qs = new URLSearchParams({
+      url: String(url || ''),
+      ref: String(ref || ''),
+      filename: String(filename || 'merged.mp4'),
+    });
+    if (height != null && height !== '') qs.set('height', String(height));
+    if (start != null && start !== '') qs.set('start', String(start));
+    if (end != null && end !== '') qs.set('end', String(end));
+
+    // 合并需要服务端「先下载再转码」，耗时随文件大小增长，故给足超时（30 分钟）
+    const workerRes = await fetch(`${base}/api/media/download-merged?${qs.toString()}`, {
+      signal: AbortSignal.timeout(30 * 60 * 1000),
+    });
+    if (!workerRes.ok) {
+      const err = await workerRes.json().catch(() => ({}));
+      res.status(workerRes.status).json({ ok: false, message: err.message || `合并下载失败（${workerRes.status}）` });
+      return;
+    }
+
+    res.setHeader('Content-Type', workerRes.headers.get('content-type') || 'video/mp4');
+    res.setHeader(
+      'Content-Disposition',
+      workerRes.headers.get('content-disposition') || `attachment; filename*=UTF-8''${encodeURIComponent(String(filename || 'merged.mp4'))}`
+    );
+    const len = workerRes.headers.get('content-length');
+    if (len) res.setHeader('Content-Length', len);
+    Readable.fromWeb(workerRes.body).pipe(res);
+  }));
+
   /** 提取音频：上传视频文件 -> worker 用 ffmpeg 提取音频 MP3 */
   router.post('/extract-audio', upload.single('file'), asyncHandler(async (req, res) => {
     if (!req.file) throw new BadRequestError('请上传视频文件');
