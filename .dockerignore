@@ -1,5 +1,4 @@
-# 减小 backend 构建 context，避免 opensource/pdf-worker 大目录导致 buildx 会话超时
-opensource/
+# 减小 backend 构建 context，避免 pdf-worker 等大目录导致 buildx 会话超时
 pdf-worker/
 .git/
 **/node_modules/
