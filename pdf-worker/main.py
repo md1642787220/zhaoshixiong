@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 from starlette.background import BackgroundTask
 from starlette.datastructures import UploadFile
 from worker import core
-from worker import page, convert, security, edit, advanced, other  # 触发注册
+from worker import page, convert, security, edit, advanced, other, docgen  # 触发注册
 
 app = FastAPI(title="shixiong-pdf-worker", version="0.1.0")
 

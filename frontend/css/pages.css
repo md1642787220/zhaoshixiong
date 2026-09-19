@@ -68,6 +68,163 @@
 .media-tab:hover { color: var(--primary); border-color: var(--primary-200); background: var(--primary-50); }
 .media-tab.active { color: #fff; background: var(--primary); border-color: var(--primary); }
 .media-panel[hidden] { display: none; }
+
+/* ---- 公文格式规范 ---- */
+.gw-guide {
+  padding: 12px 14px; margin-bottom: 16px;
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius-sm);
+  background: var(--primary-50);
+  font-size: 12.5px; line-height: 1.8; color: var(--text-secondary);
+}
+.gw-guide b { color: var(--primary-dark); }
+
+/* ---- 公文字体别名映射 ----
+   docx 里写的是「仿宋_GB2312 / 楷体_GB2312」这类公文字体名，而本机通常只装了
+   Windows 自带的 FangSong / KaiTi / SimHei。用 local() 把这些名字映射到已有的等价字体，
+   预览就不会因为找不到字体名而整体退化成默认字体。缺字体时该条自动失效并回退。 */
+@font-face { font-family: '仿宋_GB2312'; src: local('FangSong'), local('仿宋'), local('STFangsong'); }
+@font-face { font-family: '楷体_GB2312'; src: local('KaiTi'), local('楷体'), local('STKaiti'), local('Kaiti SC'); }
+@font-face { font-family: '黑体'; src: local('SimHei'), local('黑体'), local('Microsoft YaHei'); }
+@font-face { font-family: '方正小标宋简体'; src: local('STZhongsong'), local('华文中宋'), local('SimSun'); }
+
+/* 放宽公文页容器：默认 .container 上限 1180px，宽屏下两侧会空出大片区域。
+   处理方式与 PDF 工作台一致（用 :has 精确限定到本页面，不影响其它工具页）。 */
+.container:has(.gw-textarea) { width: 94%; max-width: 1560px; }
+
+/* 公文页两栏：左侧填写、右侧版式参考。
+   之前所有内容纵向堆叠，宽屏时右侧完全空着；拆成两栏后表单与示例各占一半，
+   预览区（处理前 / 处理后对比）则放在两栏下方占满整宽 —— 那里的 A4 纸更吃宽度。 */
+.gw-layout {
+  display: grid; gap: 24px; align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.gw-col { min-width: 0; }
+/* 示例卡片在栏顶不留外边距 */
+.gw-col-demo .gw-sample { margin-top: 0; }
+@media (max-width: 1180px) {
+  .gw-layout { grid-template-columns: 1fr; }
+}
+.gw-textarea { resize: vertical; min-height: 160px; line-height: 1.8; font-family: inherit; }
+.gw-grid {
+  display: grid; gap: 12px 16px; margin-top: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+.gw-tip {
+  margin-top: 16px; padding: 10px 12px;
+  border: 1px dashed var(--border-strong); border-radius: var(--radius-sm);
+  font-size: 12px; line-height: 1.7; color: var(--text-muted);
+}
+.gw-tip b { color: var(--text-secondary); }
+
+/* ---- 公文：操作区 ---- */
+.gw-actions {
+  display: flex; align-items: center; gap: 12px;
+  flex-wrap: wrap; margin-top: 18px;
+}
+.gw-actions-tip { font-size: 12.5px; }
+
+/* ---- 公文：版式示例（内容 + 格式规格同时展示） ---- */
+.gw-sample {
+  margin-top: 14px; overflow: hidden;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+}
+.gw-sample-head {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 9px 14px; background: #fff;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px; font-weight: 600; color: var(--text);
+}
+.gw-sample-note { font-size: 12px; font-weight: 400; color: var(--text-muted); }
+/* 示例区：真实渲染的文档 + 规格表，上下堆叠 */
+.gw-sample-body {
+  display: grid; gap: 20px; align-items: start;
+  padding: 18px 16px; background: #fff;
+}
+
+/* ---- Word 文档渲染宿主（docx-preview 的输出挂在这里） ----
+   组件生成 <div class="docx-wrapper"><section class="docx">…</section></div>，
+   但本身不带样式，纸张外观需要在页面上补齐。 */
+.gw-docx-host { width: 100%; background: #fff; }
+.gw-docx-host .docx-wrapper {
+  background: transparent; padding: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.gw-docx-host .docx-wrapper > section.docx {
+  margin: 0; background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .1), 0 8px 24px rgba(0, 0, 0, .08);
+}
+/* A4 版面渲染出来宽约 794px，示例所在的右栏只有约 610px，需要等比缩小。
+   用 zoom 而不是 transform：zoom 会一并改变布局占位，无需再补偿容器高度。 */
+.gw-docx-sample { zoom: .72; }
+.gw-render-fallback {
+  margin: 0; padding: 26px 14px; text-align: center;
+  font-size: 12.5px; line-height: 1.8; color: var(--text-muted);
+}
+
+/* 规格对照表：字体没装时用户也能照此在 Word 里逐项设置 */
+.gw-spec { width: 100%; border-collapse: collapse; font-size: 12.5px; line-height: 1.5; }
+.gw-spec th,
+.gw-spec td {
+  padding: 6px 9px; text-align: left;
+  border: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+.gw-spec th {
+  background: var(--surface-soft); font-weight: 600;
+  color: var(--text); white-space: nowrap;
+}
+.gw-spec td { color: var(--text-secondary); }
+.gw-spec tbody td:first-child { color: var(--text); font-weight: 600; white-space: nowrap; }
+.gw-spec-foot { margin: 12px 0 0; font-size: 12px; line-height: 1.85; color: var(--text-muted); }
+.gw-spec-foot b { color: var(--text-secondary); }
+
+@media (max-width: 1180px) {
+  .gw-docx-sample { zoom: .8; }   /* 单栏时整宽可用，可以放大些 */
+}
+@media (max-width: 560px) {
+  .gw-docx-sample { zoom: .5; }
+}
+
+/* ---- 公文：处理前 / 处理后 双栏预览 ----
+   处理后是真实渲染的 Word（A4 版面约 794px 宽），所以右栏留得宽很多；
+   左侧纯文本只是对照，窄些反而更突出对比。 */
+.gw-preview {
+  display: grid; gap: 16px; margin-top: 18px;
+  grid-template-columns: minmax(220px, 0.42fr) minmax(0, 1.58fr);
+}
+@media (max-width: 1100px) {
+  .gw-preview { grid-template-columns: 1fr; }
+}
+.gw-pane {
+  display: flex; flex-direction: column; min-width: 0;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface-soft); overflow: hidden;
+}
+.gw-pane-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap;
+  padding: 10px 14px; background: #fff;
+  border-bottom: 1px solid var(--border);
+}
+.gw-pane-title {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: var(--text);
+}
+.gw-pane-sub { font-size: 12px; color: var(--text-muted); }
+.gw-pane-body { padding: 16px; max-height: 560px; overflow: auto; }
+
+/* 处理前：原始文本（无任何版式，正好与右侧形成对比） */
+.gw-before-text {
+  margin: 0; white-space: pre-wrap; overflow-wrap: anywhere;
+  font-family: inherit; font-size: 13px; line-height: 1.9;
+  color: var(--text-secondary);
+}
+
+.gw-preview-hint {
+  margin: 12px 0 0; font-size: 12.5px; line-height: 1.7; color: var(--text-muted);
+}
 .media-preview-wrap { margin: 16px 0; }
 .media-preview {
   width: 100%; max-height: 360px;

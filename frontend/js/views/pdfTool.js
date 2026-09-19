@@ -84,7 +84,8 @@ function renderParam(p, prefix = '') {
       </div>`;
       break;
     case 'switch':
-      inner = `<label class="switch"><input id="${id}" name="${p.name}" type="checkbox" value="1"><span></span></label>`;
+      // p.value 为真时默认勾选（部分工具希望常见的识别项默认开启）
+      inner = `<label class="switch"><input id="${id}" name="${p.name}" type="checkbox" value="1"${p.value ? ' checked' : ''}><span></span></label>`;
       break;
     default:
       inner = `<input id="${id}" name="${p.name}" class="input">`;

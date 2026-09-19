@@ -29,6 +29,10 @@ const PLANNED = [
   'ocr', 'compare', 'read-annotate',
   'inspect-structure', 'export-xml', 'edit-bookmarks', 'replace-fonts', 'remove-actions',
   'render-page',
+  // 文档生成类（产出 Word / 批量 PDF，而非对单个 PDF 原地处理）
+  'gongwen-format',
+  // 智能脱敏：按规则自动识别敏感信息并遮盖（PyMuPDF）
+  'auto-redact',
 ];
 
 /** 需要外部引擎的 action（纯 Node 无法完成） */
@@ -45,6 +49,10 @@ const ENGINE_ACTIONS = new Set([
   'edit-bookmarks',
   // PDF 页面渲染为图片：供前端签名位置可视化预览（PyMuPDF）
   'render-page',
+  // 公文格式规范：由 python-docx 生成规范版式 Word，纯 Node 无此能力
+  'gongwen-format',
+  // 智能脱敏：需要读取 PDF 文本层并精确遮盖（PyMuPDF）
+  'auto-redact',
 ]);
 
 /** 各引擎依赖功能所需引擎说明（用于降级提示） */
@@ -69,6 +77,8 @@ const ENGINE_LABELS = {
   compare: 'PDF 差异比对引擎',
   'edit-bookmarks': 'PyMuPDF（书签 / 目录写入）',
   'render-page': 'PyMuPDF（PDF 页面渲染为图片）',
+  'gongwen-format': 'python-docx（公文 Word 生成与排版）',
+  'auto-redact': 'PyMuPDF（按规则自动识别并遮盖敏感信息）',
 };
 
 /**
@@ -95,6 +105,10 @@ const WORKER_ACTIONS = new Set([
   // other
   'ocr', 'compare', 'read-annotate', 'inspect-structure', 'export-xml',
   'edit-bookmarks', 'replace-fonts', 'remove-actions',
+  // docgen（公文格式规范等文档生成能力）
+  'gongwen-format',
+  // security（智能脱敏）
+  'auto-redact',
 ]);
 
 /** 已登记但尚未真正实现的 action（worker 处理时直接返回 501） */

@@ -7,6 +7,7 @@
 import homeView from './home.js';
 import toolsView from './tools.js';
 import mediaView from './media.js';
+import gongwenView from './gongwen.js';
 import handwritingView from './handwriting.js';
 import idphotoView from './idphoto.js';
 import learnView from './learn.js';
@@ -21,6 +22,7 @@ export const views = [
   { path: '/', view: homeView },
   { path: '/tools', view: toolsView },
   { path: '/tools/media', view: mediaView },
+  { path: '/tools/gongwen', view: gongwenView },
   { path: '/tools/handwriting', view: handwritingView },
   { path: '/tools/idphoto', view: idphotoView },
   { path: '/learn', view: learnView },

@@ -16,6 +16,14 @@ export const TOOLS = [
     path: '/tools/media',
   },
   {
+    id: 'gongwen',
+    icon: 'file-info',
+    name: '公文格式规范',
+    desc: '粘贴正文或上传 Word，一键套用党政机关公文格式（GB/T 9704-2012）。',
+    intro: '写材料最费时的往往不是内容，而是格式——标题用什么字体、正文几号、行距多少、页边距怎么留。这一页把《党政机关公文格式》国家标准直接套用上去：标题小标宋二号居中，正文仿宋_GB2312 三号、固定行距 28 磅，段落层级自动识别（一、→ 黑体，「（一）」→ 楷体），页边距按国标设置。粘贴正文或上传 Word，一键生成规范公文。',
+    path: '/tools/gongwen',
+  },
+  {
     id: 'handwriting',
     icon: 'pen-tool',
     name: '手写体转换',
